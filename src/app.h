@@ -13,5 +13,6 @@ typedef struct {
 void App_init(App* app);
 void App_clearBuffer(App* app);
 void App_free(App* app);
+void App_setPixel(App* app, int x, int y, uint32_t color);
 
 #endif

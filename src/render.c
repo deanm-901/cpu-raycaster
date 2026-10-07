@@ -34,11 +34,30 @@ void renderRect(App* app, Rect rect) {
             if (px < 0 || px >  SCREEN_WIDTH) continue;
             if (py < 0 || py > SCREEN_HEIGHT) continue;
 
-            app->screen_pixels[(SCREEN_WIDTH*rect.y+rect.x)+(SCREEN_WIDTH*y+x)] = rect.color;
+            App_setPixel(app, rect.x+x,rect.y+y, rect.color);
         }
     }
 }
 
-void renderLine(App* app, Pos2 p1, Pos2 p2) {
+void renderLine(App* app, int p1[2], int p2[2], uint32_t color) {
+    float diff[2] = {p2[X]-p1[X], p2[Y]-p1[Y]};
+    float step;
+
+    if (abs(diff[X]) >= abs(diff[Y]))
+        step = abs(diff[X]);
+    else
+        step = abs(diff[Y]);
     
+    diff[X] = diff[X]/step;
+    diff[Y] = diff[Y]/step;
+
+    float pos[2] = {p1[X], p1[Y]};
+    int i = 0;
+
+    while (i <= step) {
+        App_setPixel(app, round(pos[X]), round(pos[Y]), color);
+        pos[X] += diff[X];
+        pos[Y] += diff[Y];
+        i++;
+    }
 }

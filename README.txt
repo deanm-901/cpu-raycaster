@@ -7,7 +7,3 @@ Or anything
 I also refuse to use C++. I wanna go old school
 (while using SDL)
 ((I also dislike C++))
-
-
-
-I am a good programmer!!

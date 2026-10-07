@@ -4,9 +4,10 @@
 #include <SDL2/SDL.h>
 
 typedef struct {
-    double x,y,a;
-    int vx,vy;
-    float speed;
+    double pos[2],a;
+    double vel[2],vela;
+    double inp[2],inpa;
+    float speed, turn_speed;
 } Player;
 
 void Player_handleKeyboardInput(Player* player, SDL_KeyboardEvent* input, int down);

@@ -9,7 +9,7 @@
                 "-g",
                 "/home/shidfardfard/c-projects/raycaster/src/*.c",
                 "-o",
-                "/home/shidfardfard/c-projects/raycaster/run",
+                "/home/shidfardfard/c-projects/raycaster/comp/run",
                 "-lSDL2",
                 "-lm"
             ],

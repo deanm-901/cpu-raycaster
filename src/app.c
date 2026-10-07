@@ -41,3 +41,7 @@ void App_free(App* app) {
     SDL_DestroyWindow(app->window);
     free(app->screen_pixels);
 }
+
+void App_setPixel(App* app, int x, int y, uint32_t color) {
+    app->screen_pixels[y*SCREEN_WIDTH+x] = color;
+}

@@ -3,7 +3,6 @@
 
 #include <SDL2/SDL.h>
 #include "app.h"
-#include "pos.h"
 
 typedef struct {
     int x;
@@ -19,6 +18,6 @@ void presentFrame(App* app);
 int pixelBackground(int x, int y, double ticks);
 
 void renderRect(App* app, Rect rect);
-void renderLine(App* app, Pos2 p1, Pos2 p2);
+void renderLine(App* app, int p1[2], int p2[2], uint32_t color);
 
 #endif

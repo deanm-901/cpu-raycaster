@@ -11,22 +11,12 @@
 #include "render.h"
 #include "colors.h"
 #include "player.h"
+#include "map.h"
 
 App app;
 Player player = {.pos={1.5,1.5}, .vel={0,0}, .a=0.0, .vela=0.0, .speed=1.5, .turn_speed=3};
 
-// temp
-int map_width  = 9;
-int map_height = 7;
-int map[] = {
-    1,1,1,1,1,1,1,1,1,
-    1,0,0,0,0,0,0,0,1,
-    1,0,0,0,0,0,1,0,1,
-    1,0,0,1,1,0,1,0,1,
-    1,0,0,1,0,0,1,0,1,
-    1,0,0,1,0,0,1,0,1,
-    1,1,1,1,1,1,1,1,1,
-};
+Map map;
 
 // in ms
 Uint64 TIME_NOW = 0;
@@ -34,6 +24,80 @@ Uint64 TIME_LAST = 0;
 // in seconds / frame
 double dt = 1;
 
+static void renderRepBackground() {
+    for (int y = 0; y < SCREEN_HEIGHT; y++) {
+        for (int x = 0; x < SCREEN_WIDTH; x++) {
+            App_setPixel(&app, x,y, pixelBackground(x,y, TIME_NOW));
+        }
+    }
+}
+
+static void renderRepFloor() {
+    for (int ry=0;ry<MAP_MAX_Y;ry++) {
+        for (int rx=0;rx<MAP_MAX_X;rx++) {
+            Rect rect = {.x=MAP_REP_SCALE*rx+1, .y=MAP_REP_SCALE*ry+1,
+                         .w=MAP_REP_SCALE-1, .h=MAP_REP_SCALE-1,
+                         .color=C_BLACK};
+            renderRect(&app, rect);
+        }
+    }
+}
+
+static void renderRepWalls() { // TODO: FIX THIS NOW!
+    for (int wh=0;wh<MAP_MAX_H;wh++) { // horizontal
+        if (map.mapH[wh] == NONE) continue;
+
+        int x = MAP_REP_SCALE*(wh % MAP_MAX_H), y = MAP_REP_SCALE*(wh / MAP_MAX_X);
+        printf("%i\n", MAP_MAX_H % wh);
+
+        int p1[2] = {x,y}, p2[2] = {x+MAP_REP_SCALE, y};
+
+        renderLine(&app, p1, p2, C_WHITE);
+    } 
+    for (int wv=0;wv<MAP_MAX_V;wv++) { // vertical
+        if (map.mapV[wv] == NONE) continue;
+
+        int x = MAP_REP_SCALE*(wv % MAP_MAX_H), y = MAP_REP_SCALE*(wv / MAP_MAX_X);
+
+        int p1[2] = {x,y}, p2[2] = {x, y+MAP_REP_SCALE};
+
+        renderLine(&app, p1, p2, C_WHITE);
+    } 
+}
+
+static void renderRepPlayer() {
+    //angle line
+    int p1[2] = {player.pos[X]*MAP_REP_SCALE, 
+                 player.pos[Y]*MAP_REP_SCALE}, 
+        p2[2] = {player.pos[X]*MAP_REP_SCALE+cos(player.a)*MAP_REP_PLAYER_SIZE*2, 
+                 player.pos[Y]*MAP_REP_SCALE+sin(player.a)*MAP_REP_PLAYER_SIZE*2};
+    renderLine(&app, p1, p2, C_RED);
+    
+    //actual player rect
+    Rect player_rect = {.x=(player.pos[X]*MAP_REP_SCALE)-(MAP_REP_PLAYER_SIZE/2), .y=(player.pos[Y]*MAP_REP_SCALE)-(MAP_REP_PLAYER_SIZE/2),
+                        .w=MAP_REP_PLAYER_SIZE, .h=MAP_REP_PLAYER_SIZE,
+                        .color=C_RED};
+    renderRect(&app, player_rect);
+}
+
+static void handleInput() {
+        SDL_Event input;
+        while(SDL_PollEvent(&input)) {
+            switch (input.type) {
+                case SDL_QUIT:
+                    exit(0);
+                    break;
+                case SDL_KEYDOWN:
+                    Player_handleKeyboardInput(&player, &input.key, 1);
+                    break;
+                case SDL_KEYUP:
+                    Player_handleKeyboardInput(&player, &input.key, -1);
+                    break;
+                default:
+                    break;
+            }
+        }
+}
 
 static void cleanup() {
     App_free(&app);
@@ -42,6 +106,8 @@ static void cleanup() {
 
 int main(int argc, char* argv[]) {
     App_init(&app);
+
+    map.mapH[2] = SOME;
 
     atexit(cleanup);
 
@@ -52,18 +118,7 @@ int main(int argc, char* argv[]) {
 
         //printf("FPS: %f\n", (double)1/dt);
 
-        // input //
-        SDL_Event input;
-        while(SDL_PollEvent(&input)) {
-            if (input.type == SDL_QUIT) exit(0);
-
-            if (input.type == SDL_KEYDOWN) {
-                Player_handleKeyboardInput(&player, &input.key, 1);
-            }
-            if (input.type == SDL_KEYUP) {
-                Player_handleKeyboardInput(&player, &input.key, 0);
-            }
-        }
+        handleInput();
 
         // velocity //
         Player_inputVelocity(&player, dt);
@@ -71,35 +126,13 @@ int main(int argc, char* argv[]) {
         // render frame //
         App_clearBuffer(&app);
 
-        // background
-        for (int y = 0; y < SCREEN_HEIGHT; y++) {
-            for (int x = 0; x < SCREEN_WIDTH; x++) {
-                App_setPixel(&app, x,y, pixelBackground(x,y, TIME_NOW));
-            }
-        }
+        renderRepBackground();
 
-        // 2d map representation
-        for (int ry=0;ry<map_height;ry++) {
-            for (int rx=0;rx<map_width;rx++) {
-                Rect rect = {.x=MAP_SCALE*rx+1, .y=MAP_SCALE*ry+1,
-                             .w=MAP_SCALE-1, .h=MAP_SCALE-1,
-                             .color=map[ry*map_width+rx]==1?C_WHITE:C_BLACK};
-                renderRect(&app, rect);
-            }
-        }
-        int p1[2] = {player.pos[X]*MAP_SCALE, 
-                     player.pos[Y]*MAP_SCALE}, 
-            p2[2] = {player.pos[X]*MAP_SCALE+cos(player.a)*20, 
-                     player.pos[Y]*MAP_SCALE+sin(player.a)*20};
-        renderLine(&app, p1, p2, C_RED);
+        renderRepFloor();
 
-        // 2d player representation
-        Rect player_rect = {.x=(player.pos[X]*MAP_SCALE)-4, .y=(player.pos[Y]*MAP_SCALE)-4,
-                            .w=8, .h=8,
-                            .color=C_RED};
-        renderRect(&app, player_rect);
+        renderRepWalls();
 
-        
+        renderRepPlayer();
 
         presentFrame(&app);
 

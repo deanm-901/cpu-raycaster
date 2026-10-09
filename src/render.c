@@ -1,5 +1,6 @@
 #include "render.h"
 #include "defs.h"
+#include "colors.h"
 #include <math.h>
 
 void prepareFrame(App* app) {
@@ -59,5 +60,25 @@ void renderLine(App* app, int p1[2], int p2[2], uint32_t color) {
         pos[X] += diff[X];
         pos[Y] += diff[Y];
         i++;
+    }
+}
+
+void renderStrip(App* app, RayData* data, int posX, int addY, float deg_amm) {
+    if (data->type == NONE) return;
+
+    float dist = data->dist * sin(PI/2 - deg_amm);
+
+    float lineH = (dist==0)? SCREEN_HEIGHT:SCREEN_HEIGHT/dist;
+
+    int startingY = SCREEN_HEIGHT/2 - lineH/2 + addY;
+
+    if (dist < 1) dist = 1;
+
+    for (int i = startingY; i < startingY+lineH; i++) {
+        if (i < 0 || i > SCREEN_HEIGHT) continue;
+
+        uint8_t s = (dist==0)? 0xFF:0xFF/dist;
+
+        App_setPixel(app, posX, i, s<<16|s<<8|s);
     }
 }

@@ -14,7 +14,7 @@
 #include "map.h"
 
 App app;
-Player player = {.pos={1.5,1.5}, .vel={0,0}, .a=0.0, .vela=0.0, .speed=1.5, .turn_speed=3};
+Player player = {.pos={1.5,1.5}, .vel={0,0}, .a=PI/2, .vela=0.0, .speed=1.5, .turn_speed=3};
 
 Map map;
 
@@ -23,6 +23,8 @@ Uint64 TIME_NOW = 0;
 Uint64 TIME_LAST = 0;
 // in seconds / frame
 double dt = 1;
+
+RayData ray_data[(int)(SCREEN_WIDTH/RAYCAST_RES)];
 
 static void renderRepBackground() {
     for (int y = 0; y < SCREEN_HEIGHT; y++) {
@@ -72,16 +74,16 @@ static void renderRepPlayer() {
                  player.pos[Y]*MAP_REP_SCALE+sin(player.a)*MAP_REP_PLAYER_SIZE*2};
 
     //raycasting line test
-    RayData data = Player_castRay(&player, &map, player.a);
-    
-    int r2[2] = {
-        data.end_pos[X]*MAP_REP_SCALE,
-        data.end_pos[Y]*MAP_REP_SCALE
-    };
+    for (int i=0; i<sizeof(ray_data)/sizeof(RayData); i++) {
+        int r2[2] = {
+            ray_data[i].end_pos[X]*MAP_REP_SCALE,
+            ray_data[i].end_pos[Y]*MAP_REP_SCALE
+        };
 
-    renderLine(&app, p1, r2, C_GREEN);
-    renderLine(&app, p1, p2, C_RED);
+        renderLine(&app, p1, r2, C_GREEN);
+    }
     
+    renderLine(&app, p1, p2, C_RED);
     //actual player rect
     Rect player_rect = {.x=(player.pos[X]*MAP_REP_SCALE)-(MAP_REP_PLAYER_SIZE/2), .y=(player.pos[Y]*MAP_REP_SCALE)-(MAP_REP_PLAYER_SIZE/2),
                         .w=MAP_REP_PLAYER_SIZE, .h=MAP_REP_PLAYER_SIZE,
@@ -108,12 +110,32 @@ static void handleInput() {
         }
 }
 
+static void raycast() {
+    int amm = sizeof(ray_data)/sizeof(RayData);
+
+    for (int i=0; i<amm; i++) {
+        double deg_amm = i*FOV/amm;
+
+        ray_data[i] = Player_castRay(&player, &map, player.a+deg_amm-(FOV/2.0));
+    }
+}
+
+static void renderRaycast() {
+    int amm = sizeof(ray_data)/sizeof(RayData);
+
+    for (int i=0; i<amm; i++) {
+        renderStrip(&app, &ray_data[i], i, 0, i*FOV/amm-(FOV/2.0));
+    }
+}
+
 static void cleanup() {
     App_free(&app);
     SDL_Quit();
 }
 
 int main(int argc, char* argv[]) {
+    int debug = 0;
+
     App_init(&app);
 
     for(int i=0;i<8;i++){ 
@@ -140,6 +162,8 @@ int main(int argc, char* argv[]) {
 
         handleInput();
 
+        raycast();
+
         // velocity //
         Player_inputVelocity(&player, dt);
 
@@ -148,11 +172,15 @@ int main(int argc, char* argv[]) {
 
         renderRepBackground();
 
-        renderRepFloor();
+        renderRaycast();
 
-        renderRepWalls();
+        if (debug) {
+            renderRepFloor();
 
-        renderRepPlayer();
+            renderRepWalls();
+
+            renderRepPlayer();
+        }
 
         presentFrame(&app);
 

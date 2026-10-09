@@ -69,12 +69,12 @@ RayData Player_castRay(Player* player, Map* map, double angle) {
     tile_correct[Y] = (ray_dir[Y] > 0) ? 0:1;
 
     double len_step[2];
-    len_step[HORZ] = ray_dir[Y]==0 ? INFINITY: fabs(1 / ray_dir[Y]);
-    len_step[VERT] = ray_dir[X]==0 ? INFINITY: fabs(1 / ray_dir[X]);
+    len_step[HORZ] = fabs(1 / ray_dir[Y]);
+    len_step[VERT] = fabs(1 / ray_dir[X]);
 
     double lengths[2];
-    lengths[HORZ] = (ray_dir[Y] > 0) ? (1-p_offset[Y])/sin(angle) : -p_offset[Y]/sin(angle);
-    lengths[VERT] = (ray_dir[X] > 0) ? (1-p_offset[X])/cos(angle) : -p_offset[X]/cos(angle);
+    lengths[HORZ] = (ray_dir[Y] > 0) ? (1-p_offset[Y])/ray_dir[Y] : -p_offset[Y]/ray_dir[Y];
+    lengths[VERT] = (ray_dir[X] > 0) ? (1-p_offset[X])/ray_dir[X] : -p_offset[X]/ray_dir[X];
 
     MapWallType type = NONE;
     double distance = 0.0;

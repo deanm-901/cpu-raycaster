@@ -3,6 +3,7 @@
 
 #include <SDL2/SDL.h>
 #include "app.h"
+#include "player.h"
 
 typedef struct {
     int x;
@@ -19,5 +20,6 @@ int pixelBackground(int x, int y, double ticks);
 
 void renderRect(App* app, Rect rect);
 void renderLine(App* app, int p1[2], int p2[2], uint32_t color);
+void renderStrip(App* app, RayData* data, int posX, int addY, float deg_amm);
 
 #endif

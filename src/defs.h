@@ -20,4 +20,6 @@
 
 #define PI 3.14159
 
+#define RAYCAST_MAX_DIST 100.0
+
 #endif

@@ -2,6 +2,7 @@
 #define PLAYER_H
 
 #include <SDL2/SDL.h>
+#include "map.h"
 
 typedef struct {
     double pos[2],a;
@@ -10,7 +11,15 @@ typedef struct {
     float speed, turn_speed;
 } Player;
 
+typedef struct {
+    double dist;
+    double end_pos[2];
+    MapWallType type;
+} RayData;
+
 void Player_handleKeyboardInput(Player* player, SDL_KeyboardEvent* input, int down);
 void Player_inputVelocity(Player* player, double dt);
+
+RayData Player_castRay(Player* player, Map* map, double angle);
 
 #endif

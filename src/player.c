@@ -50,3 +50,56 @@ void Player_inputVelocity(Player* player, double dt) {
     player->pos[Y] += player->vel[Y]*dt*player->speed;
 }
 
+RayData Player_castRay(Player* player, Map* map, double angle) {
+    #define HORZ 0
+    #define VERT 1
+    
+    double pos[2] = {player->pos[X], player->pos[Y]};
+    double ray_dir[2] = {cos(angle), sin(angle)};
+    int tile_pos[2] = {(int)pos[X], (int)pos[Y]};
+
+    double p_offset[2] = {pos[X]-tile_pos[X], pos[Y]-tile_pos[Y]};
+
+    double tile_step[2];
+    tile_step[X] = (ray_dir[X] > 0) ? 1:-1;
+    tile_step[Y] = (ray_dir[Y] > 0) ? 1:-1;
+
+    int tile_correct[2];
+    tile_correct[X] = (ray_dir[X] > 0) ? 0:1;
+    tile_correct[Y] = (ray_dir[Y] > 0) ? 0:1;
+
+    double len_step[2];
+    len_step[HORZ] = ray_dir[Y]==0 ? INFINITY: fabs(1 / ray_dir[Y]);
+    len_step[VERT] = ray_dir[X]==0 ? INFINITY: fabs(1 / ray_dir[X]);
+
+    double lengths[2];
+    lengths[HORZ] = (ray_dir[Y] > 0) ? (1-p_offset[Y])/sin(angle) : -p_offset[Y]/sin(angle);
+    lengths[VERT] = (ray_dir[X] > 0) ? (1-p_offset[X])/cos(angle) : -p_offset[X]/cos(angle);
+
+    MapWallType type = NONE;
+    double distance = 0.0;
+    while (type == NONE && distance < RAYCAST_MAX_DIST) {
+        if (lengths[VERT] < lengths[HORZ]) {
+            tile_pos[X] += tile_step[X];
+            distance = lengths[VERT];
+            lengths[VERT] += len_step[VERT];
+
+            type = map->mapV[tile_pos[Y]*(MAP_MAX_X+1)+(tile_pos[X]+tile_correct[X])];
+        } else {
+            tile_pos[Y] += tile_step[Y];
+            distance = lengths[HORZ];
+            lengths[HORZ] += len_step[HORZ];
+
+            type = map->mapH[(tile_pos[Y]+tile_correct[Y])*MAP_MAX_X+tile_pos[X]];
+        }
+
+        if (tile_pos[X] < 0 || tile_pos[X] > MAP_MAX_X || tile_pos[Y] < 0 || tile_pos[Y] > MAP_MAX_Y) break;
+    }
+
+    #undef HORZ
+    #undef VERT
+
+    RayData data = {.dist = distance, .type = type, .end_pos = {pos[X]+ray_dir[X]*distance, pos[Y]+ray_dir[Y]*distance}};
+
+    return data;
+}

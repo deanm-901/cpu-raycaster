@@ -43,12 +43,11 @@ static void renderRepFloor() {
     }
 }
 
-static void renderRepWalls() { // TODO: FIX THIS NOW!
+static void renderRepWalls() {
     for (int wh=0;wh<MAP_MAX_H;wh++) { // horizontal
         if (map.mapH[wh] == NONE) continue;
 
-        int x = MAP_REP_SCALE*(wh % MAP_MAX_H), y = MAP_REP_SCALE*(wh / MAP_MAX_X);
-        printf("%i\n", MAP_MAX_H % wh);
+        int x = MAP_REP_SCALE*(wh % MAP_MAX_X), y = MAP_REP_SCALE*(wh / MAP_MAX_X);
 
         int p1[2] = {x,y}, p2[2] = {x+MAP_REP_SCALE, y};
 
@@ -57,7 +56,7 @@ static void renderRepWalls() { // TODO: FIX THIS NOW!
     for (int wv=0;wv<MAP_MAX_V;wv++) { // vertical
         if (map.mapV[wv] == NONE) continue;
 
-        int x = MAP_REP_SCALE*(wv % MAP_MAX_H), y = MAP_REP_SCALE*(wv / MAP_MAX_X);
+        int x = MAP_REP_SCALE*(wv % (MAP_MAX_X+1)), y = MAP_REP_SCALE*(wv / (MAP_MAX_X+1));
 
         int p1[2] = {x,y}, p2[2] = {x, y+MAP_REP_SCALE};
 
@@ -71,6 +70,16 @@ static void renderRepPlayer() {
                  player.pos[Y]*MAP_REP_SCALE}, 
         p2[2] = {player.pos[X]*MAP_REP_SCALE+cos(player.a)*MAP_REP_PLAYER_SIZE*2, 
                  player.pos[Y]*MAP_REP_SCALE+sin(player.a)*MAP_REP_PLAYER_SIZE*2};
+
+    //raycasting line test
+    RayData data = Player_castRay(&player, &map, player.a);
+    
+    int r2[2] = {
+        data.end_pos[X]*MAP_REP_SCALE,
+        data.end_pos[Y]*MAP_REP_SCALE
+    };
+
+    renderLine(&app, p1, r2, C_GREEN);
     renderLine(&app, p1, p2, C_RED);
     
     //actual player rect
@@ -107,7 +116,18 @@ static void cleanup() {
 int main(int argc, char* argv[]) {
     App_init(&app);
 
-    map.mapH[2] = SOME;
+    for(int i=0;i<8;i++){ 
+        map.mapH[i] = SOME;
+        map.mapH[i+128] = SOME;
+
+        map.mapV[17*i] = SOME;
+        map.mapV[17*i+8] = SOME;
+    }
+    map.mapH[20] = SOME;
+    map.mapH[21] = SOME;
+    map.mapV[21] = SOME;
+    map.mapV[38] = SOME;
+    map.mapV[39] = SOME;
 
     atexit(cleanup);
 

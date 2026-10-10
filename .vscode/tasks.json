@@ -11,7 +11,8 @@
                 "-o",
                 "/home/shidfardfard/c-projects/raycaster/comp/run",
                 "-lSDL2",
-                "-lm"
+                "-lm",
+                "-lpng",
             ],
             "options": {
                 "cwd": "${fileDirname}"

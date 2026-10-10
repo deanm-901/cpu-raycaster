@@ -11,11 +11,19 @@ typedef struct {
     float speed, turn_speed;
 } Player;
 
+typedef enum {
+    VERTICAL,
+    HORIZONTAL,
+} RayHitSide;
+
 typedef struct {
     double dist;
     double end_pos[2];
     MapWallType type;
+    RayHitSide side;
+    double u;
 } RayData;
+
 
 void Player_handleKeyboardInput(Player* player, SDL_KeyboardEvent* input, int down);
 void Player_inputVelocity(Player* player, double dt);

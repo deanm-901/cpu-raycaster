@@ -28,4 +28,6 @@
 #define FOV 75.0 * DEG_TO_RAD
 #define RAYCAST_RES 1.0
 
+#define MAX_IMAGE_COUNT 64
+
 #endif

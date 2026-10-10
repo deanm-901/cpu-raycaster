@@ -11,7 +11,11 @@
 #include "render.h"
 #include "colors.h"
 #include "player.h"
+#include "images.h"
 #include "map.h"
+
+// there is one image holder per instance of the executable file
+ImageHolder image_holder;
 
 App app;
 Player player = {.pos={1.5,1.5}, .vel={0,0}, .a=PI/2, .vela=0.0, .speed=1.5, .turn_speed=3};
@@ -131,6 +135,7 @@ static void renderRaycast() {
 static void cleanup() {
     App_free(&app);
     SDL_Quit();
+    freeImageHolder();
 }
 
 int main(int argc, char* argv[]) {

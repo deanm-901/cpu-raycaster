@@ -77,7 +77,7 @@ void renderStrip(App* app, RayData* data, int posX, int addY, float deg_amm) {
     for (int i = startingY; i < startingY+lineH; i++) {
         if (i < 0 || i > SCREEN_HEIGHT) continue;
 
-        uint8_t s = (dist==0)? 0xFF:0xFF/dist;
+        uint8_t s = 0xFF*data->u;
 
         App_setPixel(app, posX, i, s<<16|s<<8|s);
     }

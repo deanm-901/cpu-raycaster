@@ -11,4 +11,6 @@
 #define C_BLACK  0x000000
 #define C_WHITE  0xFFFFFF
 
+#define C_DRKRED 0x800000
+
 #endif

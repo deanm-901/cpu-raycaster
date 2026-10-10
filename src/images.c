@@ -3,7 +3,7 @@
 #include <png.h>
 
 unsigned char png_homer[]  = {
-    #embed "../img/homer.png"
+    #embed "../images/homer.png"
 };
 size_t png_homer_size = sizeof png_homer;
 

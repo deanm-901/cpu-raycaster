@@ -1,6 +1,8 @@
 #include "app.h"
 #include "defs.h"
 
+extern char *title;
+
 void App_init(App* app) {
     int renderer_flags, window_flags;
 
@@ -12,7 +14,7 @@ void App_init(App* app) {
         exit(1);
     }
 
-    app->window = SDL_CreateWindow(SCREEN_NAME, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, window_flags);
+    app->window = SDL_CreateWindow(title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, window_flags);
 
     if (!app->window) {
         printf("Failed to open %d x %d window: %s\n", SCREEN_WIDTH, SCREEN_HEIGHT, SDL_GetError());
@@ -43,5 +45,7 @@ void App_free(App* app) {
 }
 
 void App_setPixel(App* app, int x, int y, uint32_t color) {
+    if (x < 0 || x > SCREEN_WIDTH || y < 0 || y > SCREEN_HEIGHT) return;
+
     app->screen_pixels[y*SCREEN_WIDTH+x] = color;
 }

@@ -25,9 +25,13 @@
 #define DEG_TO_RAD 0.0174532925
 #define RAD_TO_DEG 57.29578
 
-#define FOV 75.0 * DEG_TO_RAD
+#define FOV 60.0 * DEG_TO_RAD
 #define RAYCAST_RES 1.0
 
 #define MAX_IMAGE_COUNT 64
+
+#define SQUASHED_WALLS 0
+
+int coordToIndex(int x, int y, int width);
 
 #endif

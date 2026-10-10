@@ -5,11 +5,13 @@
 #include <png.h>
 #include "defs.h"
 
-extern const unsigned char txt_test[];
+extern unsigned char png_homer[];
+extern size_t png_homer_size;
 
 typedef struct {
     png_image image;
     uint32_t* pixels;
+    size_t size;
 } ImageData;
 
 typedef struct {

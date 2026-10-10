@@ -2,9 +2,10 @@
 #include <stdlib.h>
 #include <png.h>
 
-const unsigned char txt_test[]  = {
-    #embed "../img/test.txt"
+unsigned char png_homer[]  = {
+    #embed "../img/homer.png"
 };
+size_t png_homer_size = sizeof png_homer;
 
 extern ImageHolder image_holder;
 
@@ -14,7 +15,7 @@ int setImageHolderIndex(unsigned char png_data[], size_t png_size) {
         return -1;
     }
 
-    ImageData data;
+    ImageData data = {0};
 
     data.image.version = PNG_IMAGE_VERSION;
 
@@ -37,7 +38,7 @@ int setImageHolderIndex(unsigned char png_data[], size_t png_size) {
         exit(1);
     }
 
-    if (!png_image_finish_read(&data.image, NULL, pixels, 0, NULL)) {
+    if (!png_image_finish_read(&data.image, NULL, rgba, 0, NULL)) {
         fprintf(stderr, "PNG decode error: %s\n", data.image.message);
         free(rgba);
         free(pixels);
@@ -57,6 +58,7 @@ int setImageHolderIndex(unsigned char png_data[], size_t png_size) {
     free(rgba);
 
     data.pixels = pixels;
+    data.size = count;
 
     int idx = image_holder.nextFreeIndex;
     image_holder.data[idx] = data;

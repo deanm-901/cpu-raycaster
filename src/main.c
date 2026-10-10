@@ -15,12 +15,14 @@
 #include "map.h"
 
 // there is one image holder per instance of the executable file
-ImageHolder image_holder;
+ImageHolder image_holder = {0};
 
 App app;
 Player player = {.pos={1.5,1.5}, .vel={0,0}, .a=PI/2, .vela=0.0, .speed=1.5, .turn_speed=3};
 
 Map map;
+
+char *title = SCREEN_NAME;
 
 // in ms
 Uint64 TIME_NOW = 0;
@@ -44,6 +46,7 @@ static void renderRepFloor() {
             Rect rect = {.x=MAP_REP_SCALE*rx+1, .y=MAP_REP_SCALE*ry+1,
                          .w=MAP_REP_SCALE-1, .h=MAP_REP_SCALE-1,
                          .color=C_BLACK};
+                         
             renderRect(&app, rect);
         }
     }
@@ -92,6 +95,7 @@ static void renderRepPlayer() {
     Rect player_rect = {.x=(player.pos[X]*MAP_REP_SCALE)-(MAP_REP_PLAYER_SIZE/2), .y=(player.pos[Y]*MAP_REP_SCALE)-(MAP_REP_PLAYER_SIZE/2),
                         .w=MAP_REP_PLAYER_SIZE, .h=MAP_REP_PLAYER_SIZE,
                         .color=C_RED};
+
     renderRect(&app, player_rect);
 }
 
@@ -103,6 +107,8 @@ static void handleInput() {
                     exit(0);
                     break;
                 case SDL_KEYDOWN:
+                    if (input.key.keysym.scancode == SDL_SCANCODE_ESCAPE) exit(0);
+
                     Player_handleKeyboardInput(&player, &input.key, 1);
                     break;
                 case SDL_KEYUP:
@@ -155,6 +161,8 @@ int main(int argc, char* argv[]) {
     map.mapV[21] = SOME;
     map.mapV[38] = SOME;
     map.mapV[39] = SOME;
+
+    int homer_idx = setImageHolderIndex(png_homer, png_homer_size);
 
     atexit(cleanup);
 

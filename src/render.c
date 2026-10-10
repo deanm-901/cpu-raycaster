@@ -68,17 +68,35 @@ void renderStrip(App* app, RayData* data, int posX, int addY, float deg_amm) {
 
     float dist = data->dist * sin(PI/2 - deg_amm);
 
-    float lineH = (dist==0)? SCREEN_HEIGHT:SCREEN_HEIGHT/dist;
+    float lineH = (dist<1 && SQUASHED_WALLS)? SCREEN_HEIGHT:SCREEN_HEIGHT/dist;
+    float clampLineH = (dist<1)? SCREEN_HEIGHT:SCREEN_HEIGHT/dist;
 
     int startingY = SCREEN_HEIGHT/2 - lineH/2 + addY;
+    int clampStartingY = SCREEN_HEIGHT/2 - clampLineH/2 + addY;
 
-    if (dist < 1) dist = 1;
+    ImageData* img = getImageData(0);
 
-    for (int i = startingY; i < startingY+lineH; i++) {
+    //if (dist < 1) dist = 1;
+    for (int i = clampStartingY; i < clampStartingY+clampLineH; i++) {
         if (i < 0 || i > SCREEN_HEIGHT) continue;
 
+        uint32_t pixel = img->pixels[coordToIndex(img->image.width*data->u, (i-startingY)/lineH * img->image.height, img->image.width)];
         uint8_t s = 0xFF*data->u;
 
-        App_setPixel(app, posX, i, s<<16|s<<8|s);
+        App_setPixel(app, posX, i, pixel);
+    }
+}
+
+void renderImage(App* app, ImageData* data, Rect rect) {
+    float scale[2] = {(float)rect.w/data->image.width, (float)rect.h/data->image.height};
+
+    for (int y = 0; y < data->image.height*scale[Y]; y++) {
+        for (int x = 0; x < data->image.width*scale[X]; x++) {
+
+            int index = ((int)(y/scale[Y])*data->image.width)+(x/scale[X]);
+            u_int32_t pixel = data->pixels[index];
+
+            App_setPixel(app, x+rect.x, y+rect.y, pixel);
+        }
     }
 }

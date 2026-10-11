@@ -72,19 +72,21 @@ void renderStrip(App* app, RayData* data, int posX, float deg_amm, float player_
     float dist = data->dist * sin(PI/2 - deg_amm);
 
     int startY = horizon - focal_length * (1.0-player_height) / dist;
-    int endY =   horizon + focal_length * player_height / dist;
-    int lineH =  endY-startY;
+    int endY   = horizon + focal_length * player_height / dist;
+    int c_startY = (startY<0)?0:startY;
+    int c_endY   = (endY>SCREEN_HEIGHT)?SCREEN_HEIGHT:endY;
+    
+    int lineH  = endY-startY;
+    int c_lineH = c_endY-c_startY;
 
     ImageData* img = getImageData(0);
 
     //if (dist < 1) dist = 1;
-    for (int i = startY; i < endY; i++) {
-        if (i < 0 || i > SCREEN_HEIGHT) continue;
-
-        uint32_t pixel = img->pixels[coordToIndex(img->image.width*data->u, (float)(i-startY)/lineH * img->image.height, img->image.width)];
+    for (int i = 0; i < c_lineH; i++) {
+        uint32_t pixel = img->pixels[coordToIndex(img->image.width*data->u, (float)(i+c_startY-startY)/lineH * img->image.height, img->image.width)];
         uint8_t s = 0xFF*data->u;
 
-        App_setPixel(app, posX, i, pixel);
+        App_setPixel(app, posX, i+c_startY, pixel);
     }
 }
 
@@ -95,7 +97,7 @@ void renderImage(App* app, ImageData* data, Rect rect) {
         for (int x = 0; x < data->image.width*scale[X]; x++) {
 
             int index = ((int)(y/scale[Y])*data->image.width)+(x/scale[X]);
-            u_int32_t pixel = data->pixels[index];
+            uint32_t pixel = data->pixels[index];
 
             App_setPixel(app, x+rect.x, y+rect.y, pixel);
         }

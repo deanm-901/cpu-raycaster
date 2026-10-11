@@ -63,24 +63,25 @@ void renderLine(App* app, int p1[2], int p2[2], uint32_t color) {
     }
 }
 
-void renderStrip(App* app, RayData* data, int posX, int addY, float deg_amm) {
+void renderStrip(App* app, RayData* data, int posX, float deg_amm, float player_height) {
     if (data->type == NONE) return;
+
+    double focal_length = SCREEN_WIDTH / (2.0 * tan(FOV / 2.0));
+    double horizon = SCREEN_HEIGHT/2;
 
     float dist = data->dist * sin(PI/2 - deg_amm);
 
-    float lineH = (dist<1 && SQUASHED_WALLS)? SCREEN_HEIGHT:SCREEN_HEIGHT/dist;
-    float clampLineH = (dist<1)? SCREEN_HEIGHT:SCREEN_HEIGHT/dist;
-
-    int startingY = SCREEN_HEIGHT/2 - lineH/2 + addY;
-    int clampStartingY = SCREEN_HEIGHT/2 - clampLineH/2 + addY;
+    int startY = horizon - focal_length * (1.0-player_height) / dist;
+    int endY =   horizon + focal_length * player_height / dist;
+    int lineH =  endY-startY;
 
     ImageData* img = getImageData(0);
 
     //if (dist < 1) dist = 1;
-    for (int i = clampStartingY; i < clampStartingY+clampLineH; i++) {
+    for (int i = startY; i < endY; i++) {
         if (i < 0 || i > SCREEN_HEIGHT) continue;
 
-        uint32_t pixel = img->pixels[coordToIndex(img->image.width*data->u, (i-startingY)/lineH * img->image.height, img->image.width)];
+        uint32_t pixel = img->pixels[coordToIndex(img->image.width*data->u, (float)(i-startY)/lineH * img->image.height, img->image.width)];
         uint8_t s = 0xFF*data->u;
 
         App_setPixel(app, posX, i, pixel);

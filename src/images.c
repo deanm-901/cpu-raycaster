@@ -72,8 +72,8 @@ ImageData* getImageData(int index) {
 }
 
 void freeImageHolder() {
-    for (int i=0; i<MAX_IMAGE_COUNT; i++) {
-        free(&image_holder.data[i].pixels);
+    for (int i=0; i<image_holder.nextFreeIndex; i++) {
+        free(image_holder.data[i].pixels);
         png_image_free(&image_holder.data[i].image);
     }
 }

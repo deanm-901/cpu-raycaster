@@ -21,7 +21,7 @@ int pixelBackground(int x, int y, double ticks);
 
 void renderRect(App* app, Rect rect);
 void renderLine(App* app, int p1[2], int p2[2], uint32_t color);
-void renderStrip(App* app, RayData* data, int posX, int addY, float deg_amm);
+void renderStrip(App* app, RayData* data, int posX, float deg_amm, float player_height);
 void renderImage(App* app, ImageData* data, Rect rect);
 
 #endif

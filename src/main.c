@@ -18,7 +18,7 @@
 ImageHolder image_holder = {0};
 
 App app;
-Player player = {.pos={1.5,1.5}, .vel={0,0}, .a=PI/2, .vela=0.0, .speed=1.5, .turn_speed=3};
+Player player = {.pos={1.5,1.5}, .vel={0,0}, .a=PI/2, .vela=0.0, .speed=1.5, .turn_speed=2, .height=0.6};
 
 Map map;
 
@@ -100,6 +100,8 @@ static void renderRepPlayer() {
 }
 
 static void handleInput() {
+        player.inpa = 0;
+    
         SDL_Event input;
         while(SDL_PollEvent(&input)) {
             switch (input.type) {
@@ -113,6 +115,9 @@ static void handleInput() {
                     break;
                 case SDL_KEYUP:
                     Player_handleKeyboardInput(&player, &input.key, -1);
+                    break;
+                case SDL_MOUSEMOTION:
+                    Player_handleMouseMotion(&player, &input.motion);
                     break;
                 default:
                     break;
@@ -134,7 +139,7 @@ static void renderRaycast() {
     int amm = sizeof(ray_data)/sizeof(RayData);
 
     for (int i=0; i<amm; i++) {
-        renderStrip(&app, &ray_data[i], i, 0, i*FOV/amm-(FOV/2.0));
+        renderStrip(&app, &ray_data[i], i, i*FOV/amm-(FOV/2.0), player.height);
     }
 }
 
@@ -145,7 +150,7 @@ static void cleanup() {
 }
 
 int main(int argc, char* argv[]) {
-    int debug = 0;
+    int debug = DEBUG;
 
     App_init(&app);
 
@@ -170,6 +175,8 @@ int main(int argc, char* argv[]) {
         TIME_LAST = TIME_NOW;
         TIME_NOW = SDL_GetTicks();
         dt = (TIME_NOW-TIME_LAST)/1000.0;
+
+        //player.height = sin(TIME_NOW/1000.0)*0.4 + 0.5;
 
         //printf("FPS: %f\n", (double)1/dt);
 

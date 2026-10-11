@@ -2,6 +2,9 @@
 #include "defs.h"
 #include <math.h>
 
+void Player_handleMouseMotion(Player* player, SDL_MouseMotionEvent* input) {
+    player->inpa = (float)input->xrel * MOUSE_SENS;
+}
 void Player_handleKeyboardInput(Player* player, SDL_KeyboardEvent* input, int down) {
     if (input->repeat != 0) return;
 
@@ -13,17 +16,11 @@ void Player_handleKeyboardInput(Player* player, SDL_KeyboardEvent* input, int do
     case SDL_SCANCODE_S:
         player->inp[X] += -down;
         break;
-    case SDL_SCANCODE_Q:
+    case SDL_SCANCODE_A:
         player->inp[Y] += -down;
         break;
-    case SDL_SCANCODE_E:
-        player->inp[Y] += down;
-        break;
-    case SDL_SCANCODE_A:
-        player->inpa += -down;
-        break;
     case SDL_SCANCODE_D:
-        player->inpa += down;
+        player->inp[Y] += down;
         break;
     default:
         break;

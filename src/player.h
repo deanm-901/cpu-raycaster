@@ -8,6 +8,7 @@ typedef struct {
     double pos[2],a;
     double vel[2],vela;
     double inp[2],inpa;
+    double height;
     float speed, turn_speed;
 } Player;
 
@@ -27,6 +28,7 @@ typedef struct {
 
 void Player_handleKeyboardInput(Player* player, SDL_KeyboardEvent* input, int down);
 void Player_inputVelocity(Player* player, double dt);
+void Player_handleMouseMotion(Player* player, SDL_MouseMotionEvent* input);
 
 RayData Player_castRay(Player* player, Map* map, double angle);
 

@@ -32,6 +32,8 @@ void App_init(App* app) {
     app->screen_pixels = malloc(SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(uint32_t));
 
     app->screen_texture = SDL_CreateTexture(app->renderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+    SDL_SetRelativeMouseMode(SDL_TRUE);
 }
 
 void App_clearBuffer(App* app) {

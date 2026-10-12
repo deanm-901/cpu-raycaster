@@ -9,9 +9,20 @@ typedef enum __attribute__((__packed__)) _MapWallType {
     SOME
 } MapWallType;
 
-typedef struct {
-    MapWallType mapH[MAP_MAX_H];
-    MapWallType mapV[MAP_MAX_V];
+typedef struct _Map {
+    int mapH[MAP_MAX_H];
+    int mapV[MAP_MAX_V];
 } Map;
+
+typedef struct _WallAttr {
+    double height;
+    int textureID;
+    int isCollidable;
+} WallAttr;
+
+typedef struct _WallTypeHolder {
+    int wall_id;
+    WallAttr walls[MAX_WALLTYPE_COUNT];
+} WallTypeHolder;
 
 #endif

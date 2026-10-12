@@ -3,12 +3,13 @@
 
 #include <SDL2/SDL.h>
 #include "map.h"
+#include "app.h"
 
 typedef struct {
     double pos[2],a;
     double vel[2],vela;
     double inp[2],inpa;
-    double height;
+    double height, size;
     float speed, turn_speed;
 } Player;
 
@@ -27,8 +28,10 @@ typedef struct {
 
 
 void Player_handleKeyboardInput(Player* player, SDL_KeyboardEvent* input, int down);
-void Player_inputVelocity(Player* player, double dt);
+void Player_inputVelocity(Player* player);
 void Player_handleMouseMotion(Player* player, SDL_MouseMotionEvent* input);
+void Player_handleCollision(Player* player, Map* map, double dt, App* app);
+void Player_handleVelocity(Player* player, double dt);
 
 RayData Player_castRay(Player* player, Map* map, double angle);
 

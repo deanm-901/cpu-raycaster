@@ -5,8 +5,8 @@
 #define SCREEN_HEIGHT 720
 #define SCREEN_NAME "Raycaster"
 
-#define MAP_REP_SCALE 40
-#define MAP_REP_PLAYER_SIZE 8
+#define MAP_REP_SCALE 20
+#define MAP_REP_PLAYER_SIZE 4
 
 #define MAP_MAX_X 16
 #define MAP_MAX_Y 16
@@ -30,9 +30,10 @@
 
 #define MAX_IMAGE_COUNT 64
 
+#define PLAYER_COLLISION_RADIUS 1
+
 // settings
-#define SQUASHED_WALLS 0
-#define DEBUG 0
+#define DEBUG 1
 #define MOUSE_SENS 0.1
 
 int coordToIndex(int x, int y, int width);

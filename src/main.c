@@ -1,4 +1,4 @@
-// TODO: 
+// TODO: Multiple types of walls, wall attributes
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -18,7 +18,7 @@
 ImageHolder image_holder = {0};
 
 App app;
-Player player = {.pos={1.5,1.5}, .vel={0,0}, .a=PI/2, .vela=0.0, .speed=1.5, .turn_speed=2, .height=0.5};
+Player player = {.pos={1.5,1.5}, .vel={0,0}, .a=PI/2, .vela=0.0, .speed=1.5, .turn_speed=2, .height=0.5, .size=0.1};
 
 Map map;
 
@@ -176,16 +176,18 @@ int main(int argc, char* argv[]) {
         TIME_NOW = SDL_GetTicks();
         dt = (TIME_NOW-TIME_LAST)/1000.0;
 
-        player.height = sin(TIME_NOW/1000.0)*0.4 + 0.5;
-
-        //printf("FPS: %f\n", (double)1/dt);
-
         handleInput();
 
         raycast();
 
-        // velocity //
-        Player_inputVelocity(&player, dt);
+        // velocity input conversion //
+        Player_inputVelocity(&player);
+
+        // collision //
+        Player_handleCollision(&player, &map, dt, &app);
+
+        // player velocity //
+        Player_handleVelocity(&player, dt);
 
         // render frame //
         App_clearBuffer(&app);

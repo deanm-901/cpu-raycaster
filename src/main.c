@@ -1,5 +1,5 @@
 // TODO: Multiple types of walls, wall attributes
-
+//       FINISH HASHMAP!!
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>

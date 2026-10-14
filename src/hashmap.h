@@ -10,7 +10,7 @@
 #define HASHMAP_MAX_LOAD 0.5
 
 typedef struct _HashMapValue {
-    uint8_t* value;
+    void* value;
     size_t value_size;
 } HashMapValue;
 
@@ -25,13 +25,16 @@ typedef struct _HashMap {
     HashMapItem* collision_arr;
     size_t collision_arr_size;
     size_t collision_arr_count;
+    size_t last_deleted_col_idx;
 } HashMap;
 
 static uint32_t hash(const char* key);
 static int HashMap_resize(HashMap* m);
+static int HashMap_setNxtCol(HashMap* m, HashMapItem item, uint32_t hsh);
+static size_t HashMap_findNxtCol(HashMap* m);
 
 HashMap* HashMap_init();
 void HashMap_free(HashMap* m);
-int HashMap_set(HashMap* m, const char* key, uint8_t* value, size_t value_size);
+int HashMap_set(HashMap* m, const char* key, void* value, size_t value_size);
 
 #endif

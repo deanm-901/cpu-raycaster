@@ -22,6 +22,8 @@ HashMap* HashMap_init() {
 
     memset(m->item_arr, 0, sizeof(m->item_arr));
 
+    m->last_deleted_col_idx = 0;
+
     return m;
 }
 
@@ -46,7 +48,37 @@ static int HashMap_resize(HashMap* m) {
     return 0;
 }
 
-int HashMap_set(HashMap* m, const char* key, uint8_t* value, size_t value_size) {
+static size_t HashMap_findNxtCol(HashMap* m) {
+    size_t idx;
+    
+    if (m->collision_arr[m->last_deleted_col_idx].key == NULL) {
+        idx = m->last_deleted_col_idx;
+    } else {
+        if (m->collision_arr[m->collision_arr_count].key != NULL) m->collision_arr_count++;
+
+        idx = m->collision_arr_count;
+    }
+
+    return idx;
+}
+
+static int HashMap_setNxtCol(HashMap* m, HashMapItem item, uint32_t hsh) {
+    size_t idx;
+    HashMapItem* current_item = &m->item_arr[hsh];
+
+    while (current_item->next_idx != NULL) {
+        idx = current_item->next_idx;
+
+        current_item = &m->collision_arr[idx];
+    }
+
+    idx = HashMap_findNxtCol(m);
+
+    current_item->next_idx = idx;
+    m->collision_arr[idx] = item;
+}
+
+int HashMap_set(HashMap* m, const char* key, void* value, size_t value_size) {
     uint32_t hsh = hash(key);
 
     HashMapValue new_value = {
@@ -62,6 +94,9 @@ int HashMap_set(HashMap* m, const char* key, uint8_t* value, size_t value_size) 
     if (m->item_arr[hsh].key == NULL) {
         m->item_arr[hsh] = new_item;
     } else {
-        
+        HashMap_setNxtCol(m, new_item, hsh);
     }
+
+    if (m->collision_arr_count > m->collision_arr_size * HASHMAP_MAX_LOAD)
+        HashMap_resize(m);
 }

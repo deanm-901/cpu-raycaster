@@ -1,32 +1,34 @@
 #include "images.h"
 #include <stdlib.h>
 #include <png.h>
+#include "hashmap.h"
 
 unsigned char png_homer[]  = {
     #embed "../images/homer.png"
 };
 size_t png_homer_size = sizeof png_homer;
 
+unsigned char png_pizza[]  = {
+    #embed "../images/pizza.png"
+};
+size_t png_pizza_size = sizeof png_pizza;
+
 extern ImageHolder image_holder;
 
-int setImageHolderIndex(unsigned char png_data[], size_t png_size) {
-    if (image_holder.nextFreeIndex >= MAX_IMAGE_COUNT) {
-        fprintf(stderr, "Max Image Ammount Reached!\n");
-        return -1;
-    }
+void setImageHolderIndex(unsigned char png_data[], size_t png_size, const char* key) {
+    ImageData* data = calloc(1, sizeof *data);
+    if (data == NULL) exit(1);
 
-    ImageData data = {0};
+    data->image.version = PNG_IMAGE_VERSION;
 
-    data.image.version = PNG_IMAGE_VERSION;
-
-    if (!png_image_begin_read_from_memory(&data.image, png_data, png_size)) {
-        fprintf(stderr, "PNG read error: %s\n", data.image.message);
+    if (!png_image_begin_read_from_memory(&data->image, png_data, png_size)) {
+        fprintf(stderr, "PNG read error: %s\n", data->image.message);
         exit(1);
     }
 
-    data.image.format = PNG_FORMAT_RGBA;
-    size_t count = (size_t)data.image.width * data.image.height;
-    size_t bytes = PNG_IMAGE_SIZE(data.image);
+    data->image.format = PNG_FORMAT_RGBA;
+    size_t count = (size_t)data->image.width * data->image.height;
+    size_t bytes = PNG_IMAGE_SIZE(data->image);
 
     unsigned char *rgba = malloc(bytes);                // !!
     uint32_t *pixels = malloc(count * sizeof *pixels);  // !!
@@ -34,46 +36,49 @@ int setImageHolderIndex(unsigned char png_data[], size_t png_size) {
     if (!rgba || !pixels) {
         free(rgba);
         free(pixels);
-        png_image_free(&data.image);
+        png_image_free(&data->image);
         exit(1);
     }
 
-    if (!png_image_finish_read(&data.image, NULL, rgba, 0, NULL)) {
-        fprintf(stderr, "PNG decode error: %s\n", data.image.message);
+    if (!png_image_finish_read(&data->image, NULL, rgba, 0, NULL)) {
+        fprintf(stderr, "PNG decode error: %s\n", data->image.message);
         free(rgba);
         free(pixels);
-        png_image_free(&data.image);
+        png_image_free(&data->image);
         exit(1);
     }
 
     for (size_t i=0; i<count; ++i) {
-        uint32_t r = rgba[4*i+0];
-        uint32_t g = rgba[4*i+1];
-        uint32_t b = rgba[4*i+2];
-        uint32_t a = rgba[4*i+3];
+        uint8_t r = rgba[4*i+0];
+        uint8_t g = rgba[4*i+1];
+        uint8_t b = rgba[4*i+2];
+        uint8_t a = rgba[4*i+3];
 
         pixels[i] = (a<<24)|(r<<16)|(g<<8)|b;
     }
 
     free(rgba);
 
-    data.pixels = pixels;
-    data.size = count;
+    data->pixels = pixels;
+    data->size = count;
 
-    int idx = image_holder.nextFreeIndex;
-    image_holder.data[idx] = data;
-    image_holder.nextFreeIndex++;
-    
-    return idx;
+    HashMap_set(image_holder.image_map, key, data, sizeof *data);
 }
 
-ImageData* getImageData(int index) {
-    return &image_holder.data[index];
+ImageData* getImageData(const char* key) {
+    HashMapItem* item = HashMap_get(image_holder.image_map, key);
+    
+    return (ImageData*)item->value.value;
+}
+
+ImageHolder initImageHolder() {
+    ImageHolder holder;
+
+    holder.image_map = HashMap_init();
+
+    return holder;
 }
 
 void freeImageHolder() {
-    for (int i=0; i<image_holder.nextFreeIndex; i++) {
-        free(image_holder.data[i].pixels);
-        png_image_free(&image_holder.data[i].image);
-    }
+    HashMap_free(image_holder.image_map);
 }

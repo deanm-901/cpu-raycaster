@@ -9,13 +9,15 @@
 #define HASHMAP_RESIZE_FACTOR 2
 #define HASHMAP_MAX_LOAD 0.5
 
+#define HASHMAP_NO_IDX -1
+
 typedef struct _HashMapValue {
     void* value;
     size_t value_size;
 } HashMapValue;
 
 typedef struct _HashMapItem {
-    size_t next_idx;
+    int64_t next_idx; // autos to -1
     const char* key;
     HashMapValue value;
 } HashMapItem;
@@ -28,13 +30,9 @@ typedef struct _HashMap {
     size_t last_deleted_col_idx;
 } HashMap;
 
-static uint32_t hash(const char* key);
-static int HashMap_resize(HashMap* m);
-static int HashMap_setNxtCol(HashMap* m, HashMapItem item, uint32_t hsh);
-static size_t HashMap_findNxtCol(HashMap* m);
-
 HashMap* HashMap_init();
 void HashMap_free(HashMap* m);
-int HashMap_set(HashMap* m, const char* key, void* value, size_t value_size);
+int  HashMap_set(HashMap* m, const char* key, void* value, size_t value_size);
+HashMapItem* HashMap_get(HashMap* m, const char* key);
 
 #endif

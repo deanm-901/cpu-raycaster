@@ -79,11 +79,19 @@ void renderStrip(App* app, RayData* data, int posX, float deg_amm, float player_
     int lineH  = endY-startY;
     int c_lineH = c_endY-c_startY;
 
-    ImageData* img = getImageData(0);
+    ImageData* img = getImageData("pizza");
 
     //if (dist < 1) dist = 1;
     for (int i = 0; i < c_lineH; i++) {
-        uint32_t pixel = img->pixels[coordToIndex(img->image.width*data->u, (float)(i+c_startY-startY)/lineH * img->image.height, img->image.width)];
+        float u = data->u;
+        if (u<0.0f)  u = 0.0f;
+        if (u>=1.0f) u = 0.99999f;
+
+        float v = (float)(i+c_startY-startY)/lineH;
+        if (v<0.0f)  v = 0.0f;
+        if (v>=1.0f) v = 0.99999f;
+
+        uint32_t pixel = img->pixels[coordToIndex(img->image.width*u, v * img->image.height, img->image.width)];
         uint8_t s = 0xFF*data->u;
 
         App_setPixel(app, posX, i+c_startY, pixel);

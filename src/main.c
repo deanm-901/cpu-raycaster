@@ -1,5 +1,5 @@
 // TODO: Multiple types of walls, wall attributes
-//       FINISH HASHMAP!!
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -13,9 +13,10 @@
 #include "player.h"
 #include "images.h"
 #include "map.h"
+#include "hashmap.h"
 
 // there is one image holder per instance of the executable file
-ImageHolder image_holder = {0};
+ImageHolder image_holder;
 
 App app;
 Player player = {.pos={1.5,1.5}, .vel={0,0}, .a=PI/2, .vela=0.0, .speed=1.5, .turn_speed=2, .height=0.5, .size=0.1};
@@ -149,6 +150,11 @@ static void cleanup() {
     freeImageHolder();
 }
 
+static void initImages() {
+    setImageHolderIndex(png_homer, png_homer_size, "homer");
+    setImageHolderIndex(png_pizza, png_pizza_size, "pizza");
+}
+
 int main(int argc, char* argv[]) {
     int debug = DEBUG;
 
@@ -167,7 +173,10 @@ int main(int argc, char* argv[]) {
     map.mapV[38] = SOME;
     map.mapV[39] = SOME;
 
-    int homer_idx = setImageHolderIndex(png_homer, png_homer_size);
+    
+    image_holder = initImageHolder();
+    
+    initImages();
 
     atexit(cleanup);
 

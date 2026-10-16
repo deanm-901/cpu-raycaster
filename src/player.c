@@ -5,7 +5,11 @@
 #include "colors.h"
 #include <math.h>
 
+extern double dt;
+
 void Player_handleMouseMotion(Player* player, SDL_MouseMotionEvent* input) {
+    if ((float)input->xrel * MOUSE_SENS == 0) return;
+
     player->inpa = (float)input->xrel * MOUSE_SENS;
 }
 void Player_handleKeyboardInput(Player* player, SDL_KeyboardEvent* input, int down) {

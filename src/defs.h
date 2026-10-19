@@ -1,12 +1,13 @@
 #ifndef DEFS_H
 #define DEFS_H
 
-#define SCREEN_WIDTH 1280
-#define SCREEN_HEIGHT 720
+#define SCREEN_WIDTH 400
+#define SCREEN_HEIGHT 300
+#define SCREEN_RESOLUTION_SCALE 2
 #define SCREEN_NAME "Raycaster"
 
-#define MAP_REP_SCALE 20
-#define MAP_REP_PLAYER_SIZE 4
+#define MAP_REP_SCALE 10
+#define MAP_REP_PLAYER_SIZE 2
 
 #define MAP_MAX_X 16
 #define MAP_MAX_Y 16

@@ -9,11 +9,21 @@ void prepareFrame(App* app) {
 }
 
 void presentFrame(App* app) {
-    SDL_UpdateTexture(app->screen_texture, NULL, app->screen_pixels, SCREEN_WIDTH * sizeof(uint32_t));
+    uint32_t *scaled_pixels = malloc((SCREEN_RESOLUTION_SCALE*SCREEN_WIDTH)*(SCREEN_RESOLUTION_SCALE*SCREEN_HEIGHT) * sizeof(uint32_t));
+
+    for (int x=0;x<SCREEN_WIDTH*SCREEN_RESOLUTION_SCALE;x++) {
+        for (int y=0;y<SCREEN_HEIGHT*SCREEN_RESOLUTION_SCALE;y++) {
+            scaled_pixels[coordToIndex(x,y,SCREEN_WIDTH*SCREEN_RESOLUTION_SCALE)] = app->screen_pixels[coordToIndex((int)x/SCREEN_RESOLUTION_SCALE, (int)y/SCREEN_RESOLUTION_SCALE, SCREEN_WIDTH)];
+        }
+    }
+
+    SDL_UpdateTexture(app->screen_texture, NULL, scaled_pixels, SCREEN_WIDTH*SCREEN_RESOLUTION_SCALE * sizeof(uint32_t));
     SDL_RenderClear(app->renderer);
     SDL_RenderCopy(app->renderer, app->screen_texture, NULL, NULL);
 
     SDL_RenderPresent(app->renderer);
+
+    free(scaled_pixels);
 }
 
 int pixelBackground(int x, int y, double ticks) {
@@ -66,7 +76,7 @@ void renderLine(App* app, int p1[2], int p2[2], uint32_t color) {
 static void renderStripCeiling(App* app, Player* player, Map* map, double horizon, int start, int posX, float deg_amm, double focal_length) {
     if (start<=0) return;
 
-    if (start>SCREEN_HEIGHT) start = SCREEN_HEIGHT;
+    if (start>=SCREEN_HEIGHT) start = SCREEN_HEIGHT-1;
 
     ImageData* img = getImageData("homer");
     const float ray_ang = player->a+deg_amm;
@@ -168,7 +178,8 @@ void renderStrip(App* app, RayData* data, Player* player, Map* map, int posX, fl
         if (u<0.0f)  u = 0.0f;
         if (u>=1.0f) u = 0.99999f;
 
-        float v = (float)(i+c_startY-startY)/lineH;
+        float v = (float)(i+c_startY-startY)/lineH * map->wall_height;
+        v -= (int)v;
         if (v<0.0f)  v = 0.0f;
         if (v>=1.0f) v = 0.99999f;
 

@@ -14,7 +14,7 @@ void App_init(App* app) {
         exit(1);
     }
 
-    app->window = SDL_CreateWindow(title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, window_flags);
+    app->window = SDL_CreateWindow(title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH * SCREEN_RESOLUTION_SCALE, SCREEN_HEIGHT * SCREEN_RESOLUTION_SCALE, window_flags);
 
     if (!app->window) {
         printf("Failed to open %d x %d window: %s\n", SCREEN_WIDTH, SCREEN_HEIGHT, SDL_GetError());
@@ -31,7 +31,10 @@ void App_init(App* app) {
     }
     app->screen_pixels = malloc(SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(uint32_t));
 
-    app->screen_texture = SDL_CreateTexture(app->renderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH, SCREEN_HEIGHT);
+    app->screen_texture = SDL_CreateTexture(app->renderer, 
+                                            SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STREAMING, 
+                                            SCREEN_WIDTH * SCREEN_RESOLUTION_SCALE, 
+                                            SCREEN_HEIGHT * SCREEN_RESOLUTION_SCALE);
 
     SDL_SetRelativeMouseMode(SDL_TRUE);
 }

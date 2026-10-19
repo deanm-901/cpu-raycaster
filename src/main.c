@@ -22,7 +22,7 @@ ImageHolder image_holder;
 App app;
 Player player = {.pos={1.5,1.5}, .vel={0,0}, .a=PI/2, .vela=0.0, .speed=1.5, .turn_speed=2, .height=0.5, .size=0.1};
 
-Map map = {.wall_height = 1.0};
+Map map = {.wall_height = 3.0};
 
 char *title = SCREEN_NAME;
 
@@ -170,6 +170,9 @@ int main(int argc, char* argv[]) {
 
         map.mapV[17*i] = T_SOME;
         map.mapV[17*i+8] = T_SOME;
+
+        for (int j=0;j<8;j++)
+            map.mapC[i*MAP_MAX_X+j] = T_SOME;
     }
     map.mapV[17*3+8] = T_NONE;
     map.mapH[20] = T_SOME;
@@ -178,7 +181,6 @@ int main(int argc, char* argv[]) {
     map.mapV[38] = T_SOME;
     map.mapV[39] = T_SOME;
 
-    memset(map.mapC, T_SOME, sizeof(map.mapC));
     memset(map.mapF, T_SOME, sizeof(map.mapF));
     
     image_holder = initImageHolder();

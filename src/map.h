@@ -4,18 +4,20 @@
 #include "defs.h"
 #include <stdlib.h>
 
-typedef enum __attribute__((__packed__)) _MapWallType {
-    NONE,
-    SOME
-} MapWallType;
+typedef enum __attribute__((__packed__)) _MapFaceType {
+    T_NONE,
+    T_SOME
+} MapFaceType;
 
 typedef struct _Map {
-    int mapH[MAP_MAX_H];
-    int mapV[MAP_MAX_V];
+    float wall_height;
+    MapFaceType mapH[MAP_MAX_H];
+    MapFaceType mapV[MAP_MAX_V];
+    MapFaceType mapF[MAP_MAX_X*MAP_MAX_Y];
+    MapFaceType mapC[MAP_MAX_X*MAP_MAX_Y];
 } Map;
 
 typedef struct _WallAttr {
-    double height;
     int textureID;
     int isCollidable;
 } WallAttr;

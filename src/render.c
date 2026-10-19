@@ -63,7 +63,7 @@ void renderLine(App* app, int p1[2], int p2[2], uint32_t color) {
     }
 }
 
-static void renderStripCeiling(App* app, Player* player, double horizon, int start, int posX, float deg_amm, double focal_length) {
+static void renderStripCeiling(App* app, Player* player, Map* map, double horizon, int start, int posX, float deg_amm, double focal_length) {
     if (start<=0) return;
 
     if (start>SCREEN_HEIGHT) start = SCREEN_HEIGHT;
@@ -75,25 +75,34 @@ static void renderStripCeiling(App* app, Player* player, double horizon, int sta
     const float cos_deg_amm = cos(deg_amm);
     const int tex_height = img->image.height, tex_width = img->image.width;
 
-    const double dist_scale = focal_length * (1-player->height) / cos_deg_amm;
+    const double dist_scale = focal_length * (map->wall_height-player->height) / cos_deg_amm;
 
     const double px = player->pos[X], py = player->pos[Y];
 
-    for (int y=start; y>0; y--) {
-        const float dz = dist_scale/(y-horizon),
-              dx = dz*ray_cos - px,
-              dy = dz*ray_sin - py;
+    for (int y=start; y>=0; y--) {
+        const float dz = dist_scale/(horizon-y),
+                    dx = dz*ray_cos + px,
+                    dy = dz*ray_sin + py;
         
-        const float u = dx-floor(dx), 
-              v = dy-floor(dy);
+        const int ix = (int)dx, iy = (int)dy;
+
+        const MapFaceType type = map->mapC[coordToIndex(ix, iy, MAP_MAX_X)];
+
+        if (type == T_NONE) continue;
         
-        const uint32_t pixel = img->pixels[coordToIndex(tex_width*u, tex_height*v, tex_width)];
+        float texX = tex_width*(dx-floor(dx)), 
+              texY = tex_height*(dy-floor(dy));
+
+        if (texX >= tex_width)  texX =  tex_width - 1;
+        if (texY >= tex_height) texY = tex_height - 1;
+        
+        const uint32_t pixel = img->pixels[coordToIndex(texX, texY, tex_width)];
 
         App_setPixel(app, posX, y, pixel);
     }
 }
 
-static void renderStripFloor(App* app, Player* player, double horizon, int start, int posX, float deg_amm, double focal_length) {
+static void renderStripFloor(App* app, Player* player, Map* map, double horizon, int start, int posX, float deg_amm, double focal_length) {
     if (start>=SCREEN_HEIGHT) return;
 
     if (start<0) start = 0;
@@ -114,23 +123,32 @@ static void renderStripFloor(App* app, Player* player, double horizon, int start
               dx = dz*ray_cos + px,
               dy = dz*ray_sin + py;
         
-        const float u = dx-floor(dx), 
-              v = dy-floor(dy);
+        const int ix = (int)dx, iy = (int)dy;
+
+        const MapFaceType type = map->mapF[coordToIndex(ix, iy, MAP_MAX_X)];
+
+        if (type == T_NONE) continue;
         
-        const uint32_t pixel = img->pixels[coordToIndex(tex_width*u, tex_height*v, tex_width)];
+        float texX = tex_width*(dx-floor(dx)), 
+              texY = tex_height*(dy-floor(dy));
+
+        if (texX >= tex_width)  texX =  tex_width - 1;
+        if (texY >= tex_height) texY = tex_height - 1;
+        
+        const uint32_t pixel = img->pixels[coordToIndex(texX, texY, tex_width)];
 
         App_setPixel(app, posX, y, pixel);
     }
 }
 
-void renderStrip(App* app, RayData* data, Player* player, int posX, float deg_amm) {
+void renderStrip(App* app, RayData* data, Player* player, Map* map, int posX, float deg_amm) {
 
     double focal_length = SCREEN_WIDTH / (2.0 * tan(FOV / 2.0));
     double horizon = SCREEN_HEIGHT/2 + focal_length*tan(player->ap);
 
     float dist = data->dist * cos(deg_amm);
 
-    int startY = horizon - focal_length * (1-player->height) / dist;
+    int startY = horizon - focal_length * (map->wall_height-player->height) / dist;
     int endY   = horizon + focal_length * player->height / dist;
     int c_startY = (startY<0)?0:startY;
     int c_endY   = (endY>SCREEN_HEIGHT)?SCREEN_HEIGHT:endY;
@@ -138,9 +156,9 @@ void renderStrip(App* app, RayData* data, Player* player, int posX, float deg_am
     int lineH  = endY-startY;
     int c_lineH = c_endY-c_startY;
 
-    renderStripFloor(app, player, horizon, c_endY, posX, deg_amm, focal_length);
-    renderStripCeiling(app, player, horizon, c_startY, posX, deg_amm, focal_length);
-    if (data->type == NONE) return;
+    renderStripFloor(app, player, map, horizon, c_endY, posX, deg_amm, focal_length);
+    renderStripCeiling(app, player, map, horizon, c_startY, posX, deg_amm, focal_length);
+    if (data->type == T_NONE) return;
 
     ImageData* img = getImageData("pizza");
 

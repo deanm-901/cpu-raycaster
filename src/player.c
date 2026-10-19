@@ -11,7 +11,7 @@ void Player_handleMouseMotion(Player* player, SDL_MouseMotionEvent* input) {
     //if ((float)input->xrel * MOUSE_SENS == 0) return;
 
     player->inpa  = (float)input->xrel * MOUSE_SENS;
-    player->inpap = -(float)input->yrel * MOUSE_SENS * 0.75;
+    if (ENABLE_PITCH) player->inpap = -(float)input->yrel * MOUSE_SENS * 0.75;
 }
 void Player_handleKeyboardInput(Player* player, SDL_KeyboardEvent* input, int down) {
     if (input->repeat != 0) return;
@@ -73,12 +73,12 @@ void Player_handleCollision(Player* player, Map* map, double dt, App* app) {
             int index_v = coordToIndex(floor(player->pos[X]+x), floor(player->pos[Y]+y), MAP_MAX_X+1);
 
             if (index_h >= 0 && index_h < MAP_MAX_H &&
-                map->mapH[index_h] != NONE) {
+                map->mapH[index_h] != T_NONE) {
                 wall_det_h[wall_det_h_idx++] = index_h;
             }
 
             if (index_v >= 0 && index_v < MAP_MAX_V &&
-                map->mapV[index_v] != NONE) {
+                map->mapV[index_v] != T_NONE) {
                 wall_det_v[wall_det_v_idx++] = index_v;
             }
         }
@@ -126,6 +126,11 @@ void Player_handleVelocity(Player* player, double dt) {
     player->pos[Y] += player->vel[Y]*dt*player->speed;
     player->a += player->vela*dt;
     player->ap += player->velap*dt;
+
+    if (LIMIT_PITCH) {
+        if (player->ap < -PI/4) player->ap = -PI/4;
+        if (player->ap > PI/4) player->ap = PI/4;
+    }
 }
 
 RayData Player_castRay(Player* player, Map* map, double angle) {
@@ -154,10 +159,10 @@ RayData Player_castRay(Player* player, Map* map, double angle) {
     lengths[HORZ] = (ray_dir[Y] > 0) ? (1-p_offset[Y])/ray_dir[Y] : -p_offset[Y]/ray_dir[Y];
     lengths[VERT] = (ray_dir[X] > 0) ? (1-p_offset[X])/ray_dir[X] : -p_offset[X]/ray_dir[X];
 
-    MapWallType type = NONE;
+    MapFaceType type = T_NONE;
     RayHitSide side = VERTICAL;
     double distance = 0.0;
-    while (type == NONE && distance < RAYCAST_MAX_DIST) {
+    while (type == T_NONE && distance < RAYCAST_MAX_DIST) {
         if (lengths[VERT] < lengths[HORZ]) {
             tile_pos[X] += tile_step[X];
             distance = lengths[VERT];

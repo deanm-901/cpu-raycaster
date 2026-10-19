@@ -22,7 +22,7 @@ ImageHolder image_holder;
 App app;
 Player player = {.pos={1.5,1.5}, .vel={0,0}, .a=PI/2, .vela=0.0, .speed=1.5, .turn_speed=2, .height=0.5, .size=0.1};
 
-Map map;
+Map map = {.wall_height = 1.0};
 
 char *title = SCREEN_NAME;
 
@@ -54,7 +54,7 @@ static void renderRepFloor() {
 
 static void renderRepWalls() {
     for (int wh=0;wh<MAP_MAX_H;wh++) { // horizontal
-        if (map.mapH[wh] == NONE) continue;
+        if (map.mapH[wh] == T_NONE) continue;
 
         int x = MAP_REP_SCALE*(wh % MAP_MAX_X), y = MAP_REP_SCALE*(wh / MAP_MAX_X);
 
@@ -63,7 +63,7 @@ static void renderRepWalls() {
         renderLine(&app, p1, p2, C_WHITE);
     } 
     for (int wv=0;wv<MAP_MAX_V;wv++) { // vertical
-        if (map.mapV[wv] == NONE) continue;
+        if (map.mapV[wv] == T_NONE) continue;
 
         int x = MAP_REP_SCALE*(wv % (MAP_MAX_X+1)), y = MAP_REP_SCALE*(wv / (MAP_MAX_X+1));
 
@@ -134,7 +134,7 @@ static void raycast() {
 
         ray_data[i] = Player_castRay(&player, &map, player.a+deg_amm-(FOV/2.0));
 
-        renderStrip(&app, &ray_data[i], &player, i, deg_amm-(FOV/2.0));
+        renderStrip(&app, &ray_data[i], &player, &map, i, deg_amm-(FOV/2.0));
     }
 }
 
@@ -165,19 +165,21 @@ int main(int argc, char* argv[]) {
     App_init(&app);
 
     for(int i=0;i<8;i++){ 
-        map.mapH[i] = SOME;
-        map.mapH[i+128] = SOME;
+        map.mapH[i] = T_SOME;
+        map.mapH[i+128] = T_SOME;
 
-        map.mapV[17*i] = SOME;
-        map.mapV[17*i+8] = SOME;
+        map.mapV[17*i] = T_SOME;
+        map.mapV[17*i+8] = T_SOME;
     }
-    map.mapV[17*3+8] = NONE;
-    map.mapH[20] = SOME;
-    map.mapH[21] = SOME;
-    map.mapV[21] = SOME;
-    map.mapV[38] = SOME;
-    map.mapV[39] = SOME;
+    map.mapV[17*3+8] = T_NONE;
+    map.mapH[20] = T_SOME;
+    map.mapH[21] = T_SOME;
+    map.mapV[21] = T_SOME;
+    map.mapV[38] = T_SOME;
+    map.mapV[39] = T_SOME;
 
+    memset(map.mapC, T_SOME, sizeof(map.mapC));
+    memset(map.mapF, T_SOME, sizeof(map.mapF));
     
     image_holder = initImageHolder();
     

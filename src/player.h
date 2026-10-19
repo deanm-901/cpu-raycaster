@@ -21,7 +21,7 @@ typedef enum {
 typedef struct {
     double dist;
     double end_pos[2];
-    MapWallType type;
+    MapFaceType type;
     RayHitSide side;
     double u;
 } RayData;

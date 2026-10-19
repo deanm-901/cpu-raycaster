@@ -33,9 +33,12 @@
 
 #define PLAYER_COLLISION_RADIUS 1
 
+
 // settings
 #define DEBUG 1
 #define MOUSE_SENS 0.1
+#define LIMIT_PITCH 1
+#define ENABLE_PITCH 1
 
 int coordToIndex(int x, int y, int width);
 

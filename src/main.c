@@ -20,7 +20,7 @@
 ImageHolder image_holder;
 
 App app;
-Player player = {.pos={1.5,1.5}, .vel={0,0}, .a=PI/2, .vela=0.0, .speed=1.5, .turn_speed=2, .height=0.6, .size=0.1};
+Player player = {.pos={1.5,1.5}, .vel={0,0}, .a=PI/2, .vela=0.0, .speed=1.5, .turn_speed=2, .height=0.5, .size=0.1};
 
 Map map;
 

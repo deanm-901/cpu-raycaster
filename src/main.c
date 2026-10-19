@@ -1,4 +1,5 @@
-// TODO: Multiple types of walls, wall attributes
+// TODO 0: Cool sky
+// TODO 1: Multiple types of walls, wall attributes
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -19,7 +20,7 @@
 ImageHolder image_holder;
 
 App app;
-Player player = {.pos={1.5,1.5}, .vel={0,0}, .a=PI/2, .vela=0.0, .speed=1.5, .turn_speed=2, .height=0.5, .size=0.1};
+Player player = {.pos={1.5,1.5}, .vel={0,0}, .a=PI/2, .vela=0.0, .speed=1.5, .turn_speed=2, .height=0.6, .size=0.1};
 
 Map map;
 
@@ -33,12 +34,10 @@ double dt = 1;
 
 RayData ray_data[(int)(SCREEN_WIDTH/RAYCAST_RES)];
 
-static void renderRepBackground() {
-    for (int y = 0; y < SCREEN_HEIGHT; y++) {
-        for (int x = 0; x < SCREEN_WIDTH; x++) {
-            App_setPixel(&app, x,y, pixelBackground(x,y, TIME_NOW));
-        }
-    }
+static void renderBackground() {
+    Rect rect = {.x=0, .y=0, .w=SCREEN_WIDTH, .h=SCREEN_HEIGHT};
+
+    renderImage(&app, getImageData("sky"), rect);
 }
 
 static void renderRepFloor() {
@@ -82,14 +81,14 @@ static void renderRepPlayer() {
                  player.pos[Y]*MAP_REP_SCALE+sin(player.a)*MAP_REP_PLAYER_SIZE*2};
 
     //raycasting line test
-    for (int i=0; i<sizeof(ray_data)/sizeof(RayData); i++) {
-        int r2[2] = {
-            ray_data[i].end_pos[X]*MAP_REP_SCALE,
-            ray_data[i].end_pos[Y]*MAP_REP_SCALE
-        };
-
-        renderLine(&app, p1, r2, C_GREEN);
-    }
+    //for (int i=0; i<sizeof(ray_data)/sizeof(RayData); i++) {
+    //    int r2[2] = {
+    //        ray_data[i].end_pos[X]*MAP_REP_SCALE,
+    //        ray_data[i].end_pos[Y]*MAP_REP_SCALE
+    //    };
+    //
+    //    renderLine(&app, p1, r2, C_GREEN);
+    //}
     
     renderLine(&app, p1, p2, C_RED);
     //actual player rect
@@ -102,6 +101,7 @@ static void renderRepPlayer() {
 
 static void handleInput() {
         player.inpa = 0;
+        player.inpap = 0;
     
         SDL_Event input;
         while(SDL_PollEvent(&input)) {
@@ -133,6 +133,8 @@ static void raycast() {
         double deg_amm = i*FOV/amm;
 
         ray_data[i] = Player_castRay(&player, &map, player.a+deg_amm-(FOV/2.0));
+
+        renderStrip(&app, &ray_data[i], &player, i, deg_amm-(FOV/2.0));
     }
 }
 
@@ -140,7 +142,8 @@ static void renderRaycast() {
     int amm = sizeof(ray_data)/sizeof(RayData);
 
     for (int i=0; i<amm; i++) {
-        renderStrip(&app, &ray_data[i], i, i*FOV/amm-(FOV/2.0), player.height);
+        double deg_amm = i*FOV/amm;
+
     }
 }
 
@@ -153,6 +156,7 @@ static void cleanup() {
 static void initImages() {
     setImageHolderIndex(png_homer, png_homer_size, "homer");
     setImageHolderIndex(png_pizza, png_pizza_size, "pizza");
+    setImageHolderIndex(png_sky, png_sky_size, "sky");
 }
 
 int main(int argc, char* argv[]) {
@@ -167,6 +171,7 @@ int main(int argc, char* argv[]) {
         map.mapV[17*i] = SOME;
         map.mapV[17*i+8] = SOME;
     }
+    map.mapV[17*3+8] = NONE;
     map.mapH[20] = SOME;
     map.mapH[21] = SOME;
     map.mapV[21] = SOME;
@@ -187,7 +192,6 @@ int main(int argc, char* argv[]) {
 
         handleInput();
 
-        raycast();
 
         // velocity input conversion //
         Player_inputVelocity(&player);
@@ -201,9 +205,9 @@ int main(int argc, char* argv[]) {
         // render frame //
         App_clearBuffer(&app);
 
-        renderRepBackground();
+        renderBackground();
 
-        renderRaycast();
+        raycast();
 
         if (debug) {
             renderRepFloor();

@@ -12,6 +12,9 @@ extern size_t png_homer_size;
 extern unsigned char png_pizza[];
 extern size_t png_pizza_size;
 
+extern unsigned char png_sky[];
+extern size_t png_sky_size;
+
 typedef struct {
     png_image image;
     uint32_t* pixels;

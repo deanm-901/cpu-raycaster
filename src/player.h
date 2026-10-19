@@ -6,9 +6,9 @@
 #include "app.h"
 
 typedef struct {
-    double pos[2],a;
-    double vel[2],vela;
-    double inp[2],inpa;
+    double pos[2],a,ap;
+    double vel[2],vela,velap;
+    double inp[2],inpa,inpap;
     double height, size;
     float speed, turn_speed;
 } Player;

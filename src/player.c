@@ -8,9 +8,10 @@
 extern double dt;
 
 void Player_handleMouseMotion(Player* player, SDL_MouseMotionEvent* input) {
-    if ((float)input->xrel * MOUSE_SENS == 0) return;
+    //if ((float)input->xrel * MOUSE_SENS == 0) return;
 
-    player->inpa = (float)input->xrel * MOUSE_SENS;
+    player->inpa  = (float)input->xrel * MOUSE_SENS;
+    player->inpap = -(float)input->yrel * MOUSE_SENS * 0.75;
 }
 void Player_handleKeyboardInput(Player* player, SDL_KeyboardEvent* input, int down) {
     if (input->repeat != 0) return;
@@ -35,7 +36,8 @@ void Player_handleKeyboardInput(Player* player, SDL_KeyboardEvent* input, int do
 }
 void Player_inputVelocity(Player* player) {
 
-    player->vela = player->inpa*player->turn_speed;
+    player->vela  = player->inpa *player->turn_speed;
+    player->velap = player->inpap*player->turn_speed;
 
     if (player->a < 0)    player->a += 2*PI;
     if (player->a > 2*PI) player->a -= 2*PI;
@@ -123,6 +125,7 @@ void Player_handleVelocity(Player* player, double dt) {
     player->pos[X] += player->vel[X]*dt*player->speed;
     player->pos[Y] += player->vel[Y]*dt*player->speed;
     player->a += player->vela*dt;
+    player->ap += player->velap*dt;
 }
 
 RayData Player_castRay(Player* player, Map* map, double angle) {

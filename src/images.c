@@ -13,6 +13,13 @@ unsigned char png_pizza[]  = {
 };
 size_t png_pizza_size = sizeof png_pizza;
 
+unsigned char png_sky[]  = {
+    #embed "../images/sky.png"
+};
+size_t png_sky_size = sizeof png_sky;
+
+
+
 extern ImageHolder image_holder;
 
 void setImageHolderIndex(unsigned char png_data[], size_t png_size, const char* key) {

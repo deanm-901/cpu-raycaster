@@ -63,21 +63,53 @@ void renderLine(App* app, int p1[2], int p2[2], uint32_t color) {
     }
 }
 
-void renderStrip(App* app, RayData* data, int posX, float deg_amm, float player_height) {
-    if (data->type == NONE) return;
+static void renderStripFloor(App* app, Player* player, double horizon, int start, int posX, float deg_amm, double focal_length) {
+    if (start>=SCREEN_HEIGHT) return;
+
+    if (start<0) start = 0;
+
+    ImageData* img = getImageData("homer");
+    const float ray_ang = player->a+deg_amm;
+    const float ray_cos = cos(ray_ang);
+    const float ray_sin = sin(ray_ang);
+    const float cos_deg_amm = cos(deg_amm);
+    const int tex_height = img->image.height, tex_width = img->image.width;
+
+    const double dist_scale = focal_length * player->height / cos_deg_amm;
+
+    const double px = player->pos[X], py = player->pos[Y];
+
+    for (int y=start; y<SCREEN_HEIGHT; y++) {
+        const float dz = dist_scale/(y-horizon),
+              dx = dz*ray_cos + px,
+              dy = dz*ray_sin + py;
+        
+        const float u = dx-floor(dx), 
+              v = dy-floor(dy);
+        
+        const uint32_t pixel = img->pixels[coordToIndex(tex_width*u, tex_height*v, tex_width)];
+
+        App_setPixel(app, posX, y, pixel);
+    }
+}
+
+void renderStrip(App* app, RayData* data, Player* player, int posX, float deg_amm) {
 
     double focal_length = SCREEN_WIDTH / (2.0 * tan(FOV / 2.0));
-    double horizon = SCREEN_HEIGHT/2;
+    double horizon = SCREEN_HEIGHT/2 + focal_length*tan(player->ap);
 
-    float dist = data->dist * sin(PI/2 - deg_amm);
+    float dist = data->dist * cos(deg_amm);
 
-    int startY = horizon - focal_length * (1.0-player_height) / dist;
-    int endY   = horizon + focal_length * player_height / dist;
+    int startY = horizon - focal_length * (1.0-player->height) / dist;
+    int endY   = horizon + focal_length * player->height / dist;
     int c_startY = (startY<0)?0:startY;
     int c_endY   = (endY>SCREEN_HEIGHT)?SCREEN_HEIGHT:endY;
     
     int lineH  = endY-startY;
     int c_lineH = c_endY-c_startY;
+
+    renderStripFloor(app, player, horizon, c_endY, posX, deg_amm, focal_length);
+    if (data->type == NONE) return;
 
     ImageData* img = getImageData("pizza");
 

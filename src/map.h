@@ -6,7 +6,10 @@
 
 typedef enum __attribute__((__packed__)) _MapFaceType {
     T_NONE,
-    T_SOME
+    T_HOMER,
+    T_PIZZA,
+    T_GRASS,
+    T_BRICK,
 } MapFaceType;
 
 typedef struct _Map {
@@ -17,14 +20,9 @@ typedef struct _Map {
     MapFaceType mapC[MAP_MAX_X*MAP_MAX_Y];
 } Map;
 
-typedef struct _WallAttr {
-    int textureID;
+typedef struct _FaceAttr {
+    int atlas_pos[2];
     int isCollidable;
-} WallAttr;
-
-typedef struct _WallTypeHolder {
-    int wall_id;
-    WallAttr walls[MAX_WALLTYPE_COUNT];
-} WallTypeHolder;
+} FaceAttr;
 
 #endif

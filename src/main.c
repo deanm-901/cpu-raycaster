@@ -7,10 +7,10 @@
 
 #include <SDL2/SDL.h>
 
+#include "colors.h"
 #include "defs.h"
 #include "app.h"
 #include "render.h"
-#include "colors.h"
 #include "player.h"
 #include "images.h"
 #include "map.h"
@@ -19,10 +19,12 @@
 // there is one image holder per instance of the executable file
 ImageHolder image_holder;
 
+FaceAttr face_types[MAX_FACETYPE_COUNT];
+
 App app;
 Player player = {.pos={1.5,1.5}, .vel={0,0}, .a=PI/2, .vela=0.0, .speed=1.5, .turn_speed=2, .height=0.5, .size=0.1};
 
-Map map = {.wall_height = 3.0};
+Map map = {.wall_height = 1.0};
 
 char *title = SCREEN_NAME;
 
@@ -34,10 +36,20 @@ double dt = 1;
 
 RayData ray_data[(int)(SCREEN_WIDTH/RAYCAST_RES)];
 
-static void renderBackground() {
-    Rect rect = {.x=0, .y=0, .w=SCREEN_WIDTH, .h=SCREEN_HEIGHT};
 
-    renderImage(&app, getImageData("sky"), rect);
+static void renderBackground() {
+    double focal_length = SCREEN_WIDTH / (2.0 * tan(FOV / 2.0));
+
+    ImageData* sky = getImageData("sky");
+
+    int y_pos = (player.ap/(2*PI))*SCREEN_HEIGHT;
+    int fill = SCREEN_HEIGHT/4;
+
+    Rect rect1 = {.x=(-player.a/(2*PI))*SCREEN_WIDTH,                .y=y_pos-fill/2, .w=SCREEN_WIDTH, .h=SCREEN_HEIGHT+fill};
+    Rect rect2 = {.x=(-player.a/(2*PI))*SCREEN_WIDTH + SCREEN_WIDTH, .y=y_pos-fill/2, .w=SCREEN_WIDTH, .h=SCREEN_HEIGHT+fill};
+
+    renderImage(&app, sky, rect1);
+    renderImage(&app, sky, rect2);
 }
 
 static void renderRepFloor() {
@@ -153,9 +165,19 @@ static void cleanup() {
     freeImageHolder();
 }
 
+static void initFaceTypes() {
+    FaceAttr homer = {.isCollidable=1,.atlas_pos={1,0}};
+    face_types[T_HOMER] = homer;
+    FaceAttr pizza = {.isCollidable=1,.atlas_pos={2,0}};
+    face_types[T_PIZZA] = pizza;
+    FaceAttr grass = {.isCollidable=1,.atlas_pos={0,0}};
+    face_types[T_GRASS] = grass;
+    FaceAttr bricks = {.isCollidable=1,.atlas_pos={0,1}};
+    face_types[T_BRICK] = bricks;
+}
+
 static void initImages() {
-    setImageHolderIndex(png_homer, png_homer_size, "homer");
-    setImageHolderIndex(png_pizza, png_pizza_size, "pizza");
+    setImageHolderIndex(png_atlas, png_atlas_size, "atlas");
     setImageHolderIndex(png_sky, png_sky_size, "sky");
 }
 
@@ -165,27 +187,28 @@ int main(int argc, char* argv[]) {
     App_init(&app);
 
     for(int i=0;i<8;i++){ 
-        map.mapH[i] = T_SOME;
-        map.mapH[i+128] = T_SOME;
+        map.mapH[i] = T_BRICK;
+        map.mapH[i+128] = T_BRICK;
 
-        map.mapV[17*i] = T_SOME;
-        map.mapV[17*i+8] = T_SOME;
+        map.mapV[17*i] = T_BRICK;
+        map.mapV[17*i+8] = T_BRICK;
 
         for (int j=0;j<8;j++)
-            map.mapC[i*MAP_MAX_X+j] = T_SOME;
+            map.mapC[i*MAP_MAX_X+j] = T_BRICK;
     }
     map.mapV[17*3+8] = T_NONE;
-    map.mapH[20] = T_SOME;
-    map.mapH[21] = T_SOME;
-    map.mapV[21] = T_SOME;
-    map.mapV[38] = T_SOME;
-    map.mapV[39] = T_SOME;
+    map.mapH[20] = T_HOMER;
+    map.mapH[21] = T_BRICK;
+    map.mapV[21] = T_BRICK;
+    map.mapV[38] = T_BRICK;
+    map.mapV[39] = T_BRICK;
 
-    memset(map.mapF, T_SOME, sizeof(map.mapF));
+    memset(map.mapF, T_GRASS, sizeof(map.mapF));
     
     image_holder = initImageHolder();
     
     initImages();
+    initFaceTypes();
 
     atexit(cleanup);
 

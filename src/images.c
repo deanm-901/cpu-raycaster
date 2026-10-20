@@ -3,22 +3,15 @@
 #include <png.h>
 #include "hashmap.h"
 
-unsigned char png_homer[]  = {
-    #embed "../images/homer.png"
-};
-size_t png_homer_size = sizeof png_homer;
-
-unsigned char png_pizza[]  = {
-    #embed "../images/pizza.png"
-};
-size_t png_pizza_size = sizeof png_pizza;
-
 unsigned char png_sky[]  = {
     #embed "../images/sky.png"
 };
 size_t png_sky_size = sizeof png_sky;
 
-
+unsigned char png_atlas[]  = {
+    #embed "../images/atlas.png"
+};
+size_t png_atlas_size = sizeof png_atlas;
 
 extern ImageHolder image_holder;
 

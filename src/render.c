@@ -3,6 +3,8 @@
 #include "colors.h"
 #include <math.h>
 
+extern FaceAttr face_types[MAX_FACETYPE_COUNT];
+
 void prepareFrame(App* app) {
     // SDL_SetRenderDrawColor(app->renderer, 50,50,50,255);
     // SDL_RenderClear(app->renderer);
@@ -78,12 +80,11 @@ static void renderStripCeiling(App* app, Player* player, Map* map, double horizo
 
     if (start>=SCREEN_HEIGHT) start = SCREEN_HEIGHT-1;
 
-    ImageData* img = getImageData("homer");
+    ImageData* img = getImageData("atlas");
     const float ray_ang = player->a+deg_amm;
     const float ray_cos = cos(ray_ang);
     const float ray_sin = sin(ray_ang);
     const float cos_deg_amm = cos(deg_amm);
-    const int tex_height = img->image.height, tex_width = img->image.width;
 
     const double dist_scale = focal_length * (map->wall_height-player->height) / cos_deg_amm;
 
@@ -95,18 +96,24 @@ static void renderStripCeiling(App* app, Player* player, Map* map, double horizo
                     dy = dz*ray_sin + py;
         
         const int ix = (int)dx, iy = (int)dy;
+        
+        if (ix > MAP_MAX_X || ix < 0 || iy > MAP_MAX_Y || iy < 0) continue;
 
         const MapFaceType type = map->mapC[coordToIndex(ix, iy, MAP_MAX_X)];
+        const FaceAttr* attr = &face_types[type];
 
         if (type == T_NONE) continue;
         
-        float texX = tex_width*(dx-floor(dx)), 
-              texY = tex_height*(dy-floor(dy));
-
-        if (texX >= tex_width)  texX =  tex_width - 1;
-        if (texY >= tex_height) texY = tex_height - 1;
+        float texX = TEXTURE_ATLAS_W*(dx-floor(dx)), 
+              texY = TEXTURE_ATLAS_H*(dy-floor(dy));
         
-        const uint32_t pixel = img->pixels[coordToIndex(texX, texY, tex_width)];
+        int atlasX = attr->atlas_pos[X] * TEXTURE_ATLAS_W;
+        int atlasY = attr->atlas_pos[Y] * TEXTURE_ATLAS_H;
+
+        if (texX >= TEXTURE_ATLAS_W) texX = TEXTURE_ATLAS_W - 1;
+        if (texY >= TEXTURE_ATLAS_H) texY = TEXTURE_ATLAS_H - 1;
+        
+        const uint32_t pixel = img->pixels[coordToIndex(texX+atlasX, texY+atlasY, img->image.width)];
 
         App_setPixel(app, posX, y, pixel);
     }
@@ -117,12 +124,11 @@ static void renderStripFloor(App* app, Player* player, Map* map, double horizon,
 
     if (start<0) start = 0;
 
-    ImageData* img = getImageData("homer");
+    ImageData* img = getImageData("atlas");
     const float ray_ang = player->a+deg_amm;
     const float ray_cos = cos(ray_ang);
     const float ray_sin = sin(ray_ang);
     const float cos_deg_amm = cos(deg_amm);
-    const int tex_height = img->image.height, tex_width = img->image.width;
 
     const double dist_scale = focal_length * player->height / cos_deg_amm;
 
@@ -135,17 +141,23 @@ static void renderStripFloor(App* app, Player* player, Map* map, double horizon,
         
         const int ix = (int)dx, iy = (int)dy;
 
+        if (ix > MAP_MAX_X || ix < 0 || iy > MAP_MAX_Y || iy < 0) continue;
+
         const MapFaceType type = map->mapF[coordToIndex(ix, iy, MAP_MAX_X)];
+        const FaceAttr* attr = &face_types[type];
 
         if (type == T_NONE) continue;
         
-        float texX = tex_width*(dx-floor(dx)), 
-              texY = tex_height*(dy-floor(dy));
-
-        if (texX >= tex_width)  texX =  tex_width - 1;
-        if (texY >= tex_height) texY = tex_height - 1;
+        float texX = TEXTURE_ATLAS_W*(dx-floor(dx)), 
+              texY = TEXTURE_ATLAS_H*(dy-floor(dy));
         
-        const uint32_t pixel = img->pixels[coordToIndex(texX, texY, tex_width)];
+        int atlasX = attr->atlas_pos[X] * TEXTURE_ATLAS_W;
+        int atlasY = attr->atlas_pos[Y] * TEXTURE_ATLAS_H;
+
+        if (texX >= TEXTURE_ATLAS_W) texX = TEXTURE_ATLAS_W - 1;
+        if (texY >= TEXTURE_ATLAS_H) texY = TEXTURE_ATLAS_H - 1;
+        
+        const uint32_t pixel = img->pixels[coordToIndex(texX+atlasX, texY+atlasY, img->image.width)];
 
         App_setPixel(app, posX, y, pixel);
     }
@@ -170,7 +182,12 @@ void renderStrip(App* app, RayData* data, Player* player, Map* map, int posX, fl
     renderStripCeiling(app, player, map, horizon, c_startY, posX, deg_amm, focal_length);
     if (data->type == T_NONE) return;
 
-    ImageData* img = getImageData("pizza");
+    FaceAttr* attr = &face_types[data->type];
+
+    ImageData* img = getImageData("atlas");
+
+    int atlasX = attr->atlas_pos[X] * TEXTURE_ATLAS_W;
+    int atlasY = attr->atlas_pos[Y] * TEXTURE_ATLAS_H;
 
     //if (dist < 1) dist = 1;
     for (int i = 0; i < c_lineH; i++) {
@@ -183,7 +200,7 @@ void renderStrip(App* app, RayData* data, Player* player, Map* map, int posX, fl
         if (v<0.0f)  v = 0.0f;
         if (v>=1.0f) v = 0.99999f;
 
-        uint32_t pixel = img->pixels[coordToIndex(img->image.width*u, v * img->image.height, img->image.width)];
+        uint32_t pixel = img->pixels[coordToIndex(u*TEXTURE_ATLAS_W + atlasX, v*TEXTURE_ATLAS_H + atlasY, img->image.width)];
         uint8_t s = 0xFF*data->u;
 
         App_setPixel(app, posX, i+c_startY, pixel);

@@ -1,8 +1,8 @@
 #ifndef DEFS_H
 #define DEFS_H
 
-#define SCREEN_WIDTH 400
-#define SCREEN_HEIGHT 300
+#define SCREEN_WIDTH 600
+#define SCREEN_HEIGHT 400
 #define SCREEN_RESOLUTION_SCALE 2
 #define SCREEN_NAME "Raycaster"
 
@@ -30,13 +30,15 @@
 #define RAYCAST_RES 1.0
 
 #define MAX_IMAGE_COUNT 128
-#define MAX_WALLTYPE_COUNT 128
+#define MAX_FACETYPE_COUNT 128
 
 #define PLAYER_COLLISION_RADIUS 1
 
+#define TEXTURE_ATLAS_W 32
+#define TEXTURE_ATLAS_H 32
 
 // settings
-#define DEBUG 1
+#define DEBUG 0
 #define MOUSE_SENS 0.1
 #define LIMIT_PITCH 1
 #define ENABLE_PITCH 1

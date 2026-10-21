@@ -1,4 +1,5 @@
 // TODO 0: Reformat map tile components
+// TODO 1: implement text
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -198,7 +199,7 @@ int main(int argc, char* argv[]) {
         for (int j=0;j<8;j++) {
             map.mapC[i*MAP_MAX_X+j] = T_BRICK;
             map.mapF[i*MAP_MAX_X+j] = T_TILES;
-            map.mapLight[i*MAP_MAX_X+j] = 0x88;
+            map.mapLight[i*MAP_MAX_X+j] = 255*pow(0.8,j+i);
         }
     }
     map.mapV[17*3+8] = T_NONE;

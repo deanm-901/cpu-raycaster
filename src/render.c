@@ -137,7 +137,7 @@ static void renderStripFloor(App* app, Player* player, Map* map, double horizon,
     const double px = player->pos[X], py = player->pos[Y];
 
     for (int y=start; y<SCREEN_HEIGHT; y++) {
-        const float dz = dist_scale/(y-horizon),
+        const float dz = dist_scale/(y-horizon+1), // +1 for correction
               dx = dz*ray_cos + px,
               dy = dz*ray_sin + py;
         

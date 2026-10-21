@@ -159,6 +159,8 @@ RayData Player_castRay(Player* player, Map* map, double angle) {
     lengths[HORZ] = (ray_dir[Y] > 0) ? (1-p_offset[Y])/ray_dir[Y] : -p_offset[Y]/ray_dir[Y];
     lengths[VERT] = (ray_dir[X] > 0) ? (1-p_offset[X])/ray_dir[X] : -p_offset[X]/ray_dir[X];
 
+    int hit_tile[2];
+
     MapFaceType type = T_NONE;
     RayHitSide side = VERTICAL;
     double distance = 0.0;
@@ -169,14 +171,20 @@ RayData Player_castRay(Player* player, Map* map, double angle) {
             side = VERTICAL;
             lengths[VERT] += len_step[VERT];
 
-            type = map->mapV[tile_pos[Y]*(MAP_MAX_X+1)+(tile_pos[X]+tile_correct[X])];
+            hit_tile[X] = tile_pos[X]+tile_correct[X]-(ray_dir[X] > 0);
+            hit_tile[Y] = tile_pos[Y];
+
+            type = map->mapV[coordToIndex(tile_pos[X]+tile_correct[X], tile_pos[Y], MAP_MAX_X+1)];
         } else {
             tile_pos[Y] += tile_step[Y];
             distance = lengths[HORZ];
             side = HORIZONTAL;
             lengths[HORZ] += len_step[HORZ];
 
-            type = map->mapH[(tile_pos[Y]+tile_correct[Y])*MAP_MAX_X+tile_pos[X]];
+            hit_tile[X] = tile_pos[X];
+            hit_tile[Y] = tile_pos[Y]+tile_correct[Y]-(ray_dir[Y] > 0);
+
+            type = map->mapH[coordToIndex(tile_pos[X], tile_pos[Y]+tile_correct[Y], MAP_MAX_X)];
         }
 
         if (tile_pos[X] < 0 || tile_pos[X] >= MAP_MAX_X || tile_pos[Y] < 0 || tile_pos[Y] >= MAP_MAX_Y) break;
@@ -197,7 +205,7 @@ RayData Player_castRay(Player* player, Map* map, double angle) {
     RayData data = {.dist = distance, 
                     .type = type, 
                     .end_pos = {end_pos[X], end_pos[Y]}, 
-                    .hit_tile = {end_pos[X]-ray_dir[X], end_pos[Y]-ray_dir[Y]},
+                    .hit_tile = {hit_tile[X], hit_tile[Y]},
                     .side = side, 
                     .u = u};
 

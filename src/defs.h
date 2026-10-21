@@ -38,7 +38,7 @@
 #define TEXTURE_ATLAS_H 32
 
 // settings
-#define DEBUG 0
+#define DEBUG 1
 #define MOUSE_SENS 0.1
 #define LIMIT_PITCH 1
 #define ENABLE_PITCH 1

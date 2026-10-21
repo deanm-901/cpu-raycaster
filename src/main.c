@@ -1,5 +1,4 @@
-// TODO 0: Cool sky
-// TODO 1: Multiple types of walls, wall attributes
+// TODO 0: Reformat map tile components
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -25,8 +24,6 @@ App app;
 Player player = {.pos={1.5,1.5}, .vel={0,0}, .a=PI/2, .vela=0.0, .speed=1.5, .turn_speed=2, .height=0.5, .size=0.1};
 
 Map map = {.wall_height = 1.0};
-
-char *title = SCREEN_NAME;
 
 // in ms
 Uint64 TIME_NOW = 0;
@@ -174,6 +171,8 @@ static void initFaceTypes() {
     face_types[T_GRASS] = grass;
     FaceAttr bricks = {.isCollidable=1,.atlas_pos={0,1}};
     face_types[T_BRICK] = bricks;
+    FaceAttr tiles = {.isCollidable=1,.atlas_pos={1,1}};
+    face_types[T_TILES] = tiles;
 }
 
 static void initImages() {
@@ -186,6 +185,9 @@ int main(int argc, char* argv[]) {
 
     App_init(&app);
 
+    memset(map.mapF, T_GRASS, sizeof(map.mapF));
+    memset(map.mapLight, 0xFF, sizeof(map.mapLight));
+
     for(int i=0;i<8;i++){ 
         map.mapH[i] = T_BRICK;
         map.mapH[i+128] = T_BRICK;
@@ -193,8 +195,11 @@ int main(int argc, char* argv[]) {
         map.mapV[17*i] = T_BRICK;
         map.mapV[17*i+8] = T_BRICK;
 
-        for (int j=0;j<8;j++)
+        for (int j=0;j<8;j++) {
             map.mapC[i*MAP_MAX_X+j] = T_BRICK;
+            map.mapF[i*MAP_MAX_X+j] = T_TILES;
+            map.mapLight[i*MAP_MAX_X+j] = 0x88;
+        }
     }
     map.mapV[17*3+8] = T_NONE;
     map.mapH[20] = T_HOMER;
@@ -202,8 +207,6 @@ int main(int argc, char* argv[]) {
     map.mapV[21] = T_BRICK;
     map.mapV[38] = T_BRICK;
     map.mapV[39] = T_BRICK;
-
-    memset(map.mapF, T_GRASS, sizeof(map.mapF));
     
     image_holder = initImageHolder();
     
@@ -218,7 +221,6 @@ int main(int argc, char* argv[]) {
         dt = (TIME_NOW-TIME_LAST)/1000.0;
 
         handleInput();
-
 
         // velocity input conversion //
         Player_inputVelocity(&player);

@@ -197,6 +197,7 @@ RayData Player_castRay(Player* player, Map* map, double angle) {
     RayData data = {.dist = distance, 
                     .type = type, 
                     .end_pos = {end_pos[X], end_pos[Y]}, 
+                    .hit_tile = {end_pos[X]-ray_dir[X], end_pos[Y]-ray_dir[Y]},
                     .side = side, 
                     .u = u};
 

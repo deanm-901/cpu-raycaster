@@ -1,8 +1,6 @@
 #include "app.h"
 #include "defs.h"
 
-extern char *title;
-
 void App_init(App* app) {
     int renderer_flags, window_flags;
 
@@ -14,7 +12,7 @@ void App_init(App* app) {
         exit(1);
     }
 
-    app->window = SDL_CreateWindow(title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH * SCREEN_RESOLUTION_SCALE, SCREEN_HEIGHT * SCREEN_RESOLUTION_SCALE, window_flags);
+    app->window = SDL_CreateWindow(SCREEN_NAME, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH * SCREEN_RESOLUTION_SCALE, SCREEN_HEIGHT * SCREEN_RESOLUTION_SCALE, window_flags);
 
     if (!app->window) {
         printf("Failed to open %d x %d window: %s\n", SCREEN_WIDTH, SCREEN_HEIGHT, SDL_GetError());

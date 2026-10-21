@@ -16,5 +16,8 @@
 #define C_DRKRED 0x800000
 
 inline uint32_t Color(uint8_t R, uint8_t G, uint8_t B, uint8_t A);
+uint32_t ColorMult(uint32_t c1, float Rm, float Gm, float Bm, float Am);
+// --WIP--
+uint32_t ColorMix(uint32_t c1, uint32_t c2, uint8_t w);
 
 #endif

@@ -2,6 +2,7 @@
 #include "defs.h"
 #include "colors.h"
 #include <math.h>
+#include <string.h>
 
 extern FaceAttr face_types[MAX_FACETYPE_COUNT];
 
@@ -223,6 +224,36 @@ void renderImage(App* app, ImageData* data, Rect rect) {
             uint32_t pixel = data->pixels[index];
 
             App_setPixel(app, x+rect.x, y+rect.y, pixel);
+        }
+    }
+}
+
+void renderText(App* app, ImageData* font, uint8_t tile_w, uint8_t tile_h, const char* text, uint32_t pos_x, uint32_t pos_y, int scale) {
+    const size_t text_len = strlen(text);
+    const size_t font_wdth = font->image.width/tile_w;
+
+    printf("%i\n", ' ');
+
+    for (int i=0;i<text_len;i++) { // each letter
+        const uint8_t idx = (uint8_t)text[i] - 32;
+
+        const uint16_t x = (idx%font_wdth) * tile_w;
+        const uint16_t y = (idx/font_wdth) * tile_h;
+
+        for (int px=0;px<tile_w;px++) {
+            for (int py=0;py<tile_h;py++) { // each internal pixel
+                const uint32_t pixel = font->pixels[coordToIndex(x+px,y+py,font->image.width)];
+
+                for (int s=0;s<scale*scale;s++) { // each displayed pixel
+                    const uint32_t s_x = s%scale;
+                    const uint32_t s_y = s/scale;
+
+                    const uint32_t pix_pos_x = pos_x+s_x + px*scale + i*tile_w;
+                    const uint32_t pix_pos_y = pos_y+s_y + py*scale;
+
+                    App_setPixel(app, pix_pos_x, pix_pos_y, pixel);
+                }
+            }
         }
     }
 }

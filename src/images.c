@@ -13,6 +13,11 @@ unsigned char png_atlas[]  = {
 };
 size_t png_atlas_size = sizeof png_atlas;
 
+unsigned char png_font1[]  = {
+    #embed "../images/font1.png"
+};
+size_t png_font1_size = sizeof png_font1;
+
 extern ImageHolder image_holder;
 
 void setImageHolderIndex(unsigned char png_data[], size_t png_size, const char* key) {

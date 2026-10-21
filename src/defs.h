@@ -44,5 +44,6 @@
 #define ENABLE_PITCH 1
 
 int coordToIndex(int x, int y, int width);
+void indexToCoord(int index, int width, int* x, int* y);
 
 #endif

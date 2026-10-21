@@ -12,6 +12,9 @@ extern size_t png_sky_size;
 extern unsigned char png_atlas[];
 extern size_t png_atlas_size;
 
+extern unsigned char png_font1[];
+extern size_t png_font1_size;
+
 typedef struct {
     png_image image;
     uint32_t* pixels;

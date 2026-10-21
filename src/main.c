@@ -177,6 +177,7 @@ static void initFaceTypes() {
 }
 
 static void initImages() {
+    setImageHolderIndex(png_font1, png_font1_size, "font1");
     setImageHolderIndex(png_atlas, png_atlas_size, "atlas");
     setImageHolderIndex(png_sky, png_sky_size, "sky");
 }
@@ -246,6 +247,8 @@ int main(int argc, char* argv[]) {
 
             renderRepPlayer();
         }
+
+        renderText(&app, getImageData("font1"), 8, 8, "Hello, World!", 0, 0, 1);
 
         presentFrame(&app);
 

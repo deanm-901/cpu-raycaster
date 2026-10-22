@@ -137,11 +137,11 @@ RayData Player_castRay(Player* player, Map* map, double angle) {
     #define HORZ 0
     #define VERT 1
     
-    double pos[2] = {player->pos[X], player->pos[Y]};
-    double ray_dir[2] = {cos(angle), sin(angle)};
+    const double pos[2] = {player->pos[X], player->pos[Y]};
+    const double ray_dir[2] = {cos(angle), sin(angle)};
     int tile_pos[2] = {(int)pos[X], (int)pos[Y]};
 
-    double p_offset[2] = {pos[X]-tile_pos[X], pos[Y]-tile_pos[Y]};
+    const double p_offset[2] = {pos[X]-tile_pos[X], pos[Y]-tile_pos[Y]};
 
     double tile_step[2];
     tile_step[X] = (ray_dir[X] > 0) ? 1:-1;
@@ -193,7 +193,7 @@ RayData Player_castRay(Player* player, Map* map, double angle) {
     #undef HORZ
     #undef VERT
 
-    double end_pos[2] = {pos[X]+ray_dir[X]*distance, pos[Y]+ray_dir[Y]*distance};
+    const double end_pos[2] = {pos[X]+ray_dir[X]*distance, pos[Y]+ray_dir[Y]*distance};
 
     double u;
     if (side==VERTICAL) {

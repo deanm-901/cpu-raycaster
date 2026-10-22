@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <pthread.h>
 
 #include <SDL2/SDL.h>
 
@@ -14,6 +15,7 @@
 #include "images.h"
 #include "map.h"
 #include "hashmap.h"
+#include "threads.h"
 
 // there is one image holder per instance of the executable file
 ImageHolder image_holder;
@@ -38,6 +40,9 @@ size_t fps_bucket_count = 0;
 float fps_avg = 0.0;
 
 RayData ray_data[SCREEN_WIDTH/RAYCAST_RES];
+
+RenderFrameThreadCtx render_thread_context_clng, render_thread_context_flor;
+pthread_t clng_rend_thread, flor_rend_thread;
 
 static void renderBackground() {
     double focal_length = SCREEN_WIDTH / (2.0 * tan(FOV / 2.0));
@@ -161,12 +166,6 @@ static void renderRaycast() {
     }
 }
 
-static void cleanup() {
-    App_free(&app);
-    SDL_Quit();
-    freeImageHolder();
-}
-
 static void initFaceTypes() {
     FaceAttr homer = {.isCollidable=1,.atlas_pos={1,0}};
     face_types[T_HOMER] = homer;
@@ -211,6 +210,51 @@ static void renderDebugText() {
     renderText(&app, getImageData("font1"), 8, 8, debug_text, MAP_MAX_X*MAP_REP_SCALE, 0, 1, C_WHITE);
 }
 
+static void initThreads() {
+    pthread_mutex_init(&render_thread_context_clng.mutex, NULL);
+    pthread_cond_init(&render_thread_context_clng.cond_end, NULL);
+    pthread_cond_init(&render_thread_context_clng.cond_start, NULL);
+
+    pthread_mutex_init(&render_thread_context_flor.mutex, NULL);
+    pthread_cond_init(&render_thread_context_flor.cond_end, NULL);
+    pthread_cond_init(&render_thread_context_flor.cond_start, NULL);
+
+    pthread_create(&clng_rend_thread, NULL, asyncRenderStripCeiling, &render_thread_context_clng);
+    pthread_create(&flor_rend_thread, NULL, asyncRenderStripFloor,   &render_thread_context_flor);
+}
+
+static void destroyThreads() {
+    pthread_mutex_lock(&render_thread_context_clng.mutex);
+    render_thread_context_clng.should_exit = 1;
+    pthread_cond_signal(&render_thread_context_clng.cond_start);
+    pthread_mutex_unlock(&render_thread_context_clng.mutex);
+
+    pthread_mutex_destroy(&render_thread_context_clng.mutex);
+    pthread_cond_destroy(&render_thread_context_clng.cond_end);
+    pthread_cond_destroy(&render_thread_context_clng.cond_start);
+
+    
+    pthread_mutex_lock(&render_thread_context_flor.mutex);
+    render_thread_context_flor.should_exit = 1;
+    pthread_cond_signal(&render_thread_context_flor.cond_start);
+    pthread_mutex_unlock(&render_thread_context_flor.mutex);
+
+    pthread_mutex_destroy(&render_thread_context_flor.mutex);
+    pthread_cond_destroy(&render_thread_context_flor.cond_end);
+    pthread_cond_destroy(&render_thread_context_flor.cond_start);
+
+    
+    pthread_join(clng_rend_thread, NULL);
+    pthread_join(flor_rend_thread, NULL);
+}
+
+static void cleanup() {
+    App_free(&app);
+    SDL_Quit();
+    freeImageHolder();
+    destroyThreads();
+}
+
 int main(int argc, char* argv[]) {
     int debug = DEBUG;
 
@@ -241,6 +285,7 @@ int main(int argc, char* argv[]) {
     image_holder = initImageHolder();
     
     initImages();
+    initThreads();
     initFaceTypes();
 
     atexit(cleanup);
@@ -284,5 +329,4 @@ int main(int argc, char* argv[]) {
         // delays every frame by ms; helps free CPU time
         SDL_Delay(2);
     }
-
 }

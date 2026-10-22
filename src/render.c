@@ -3,6 +3,7 @@
 #include "colors.h"
 #include <math.h>
 #include <string.h>
+#include <pthread.h>
 
 extern FaceAttr face_types[MAX_FACETYPE_COUNT];
 
@@ -84,7 +85,7 @@ static void renderStripCeiling(App* app, Player* player, Map* map, double horizo
 
     if (player->height > map->wall_height) return;
 
-    ImageData* img = getImageData("atlas");
+    const ImageData* img = getImageData("atlas");
     const float ray_ang = player->a+deg_amm;
     const float ray_cos = cos(ray_ang);
     const float ray_sin = sin(ray_ang);
@@ -132,7 +133,7 @@ static void renderStripFloor(App* app, Player* player, Map* map, double horizon,
 
     if (start<0) start = 0;
 
-    ImageData* img = getImageData("atlas");
+    const ImageData* img = getImageData("atlas");
     const float ray_ang = player->a+deg_amm;
     const float ray_cos = cos(ray_ang);
     const float ray_sin = sin(ray_ang);
@@ -176,26 +177,50 @@ static void renderStripFloor(App* app, Player* player, Map* map, double horizon,
     }
 }
 
+static void applyRenderFrameCtxVariables(RenderFrameThreadCtx* ctx, App* app, Player* player, Map* map, double horizon, int clng_start, int flor_start, int posX, float deg_amm, double focal_length) {
+    ctx->app = app;
+    ctx->player = player;
+    ctx->map = map;
+    ctx->horizon = horizon;
+    ctx->clng_start = clng_start;
+    ctx->flor_start = flor_start;
+    ctx->posX = posX;
+    ctx->deg_amm = deg_amm;
+    ctx->focal_length = focal_length;
+
+    ctx->is_ready = true;
+    ctx->is_done = false;
+}
+
+extern pthread_t clng_rend_thread, flor_rend_thread;
+extern RenderFrameThreadCtx render_thread_context_clng, render_thread_context_flor;
+
 void renderStrip(App* app, RayData* data, Player* player, Map* map, int posX, float deg_amm) {
 
-    double focal_length = SCREEN_WIDTH / (2.0 * tan(FOV / 2.0));
-    double horizon = SCREEN_HEIGHT/2 + focal_length*tan(player->ap);
+    const double focal_length = SCREEN_WIDTH / (2.0 * tan(FOV / 2.0));
+    const double horizon = SCREEN_HEIGHT/2 + focal_length*tan(player->ap);
 
-    float dist = data->dist * cos(deg_amm);
+    const float dist = data->dist * cos(deg_amm);
 
-    int startY = horizon - focal_length * (map->wall_height-player->height) / dist;
-    int endY   = horizon + focal_length * (player->height) / dist;
-    int c_startY = (startY<0)?0:startY;
-    int c_endY   = (endY>SCREEN_HEIGHT)?SCREEN_HEIGHT:endY;
+    const int startY = horizon - focal_length * (map->wall_height-player->height) / dist;
+    const int endY   = horizon + focal_length * (player->height) / dist;
+    const int c_startY = (startY<0)?0:startY;
+    const int c_endY   = (endY>SCREEN_HEIGHT)?SCREEN_HEIGHT:endY;
     
-    int lineH  = endY-startY;
-    int c_lineH = c_endY-c_startY;
+    const int lineH  = endY-startY;
+    const int c_lineH = c_endY-c_startY;
 
-    renderStripFloor(app, player, map, horizon, c_endY, posX, deg_amm, focal_length);
-    renderStripCeiling(app, player, map, horizon, c_startY, posX, deg_amm, focal_length);
+    // renderStripFloor(app, player, map, horizon, c_endY, posX, deg_amm, focal_length);
+    // renderStripCeiling(app, player, map, horizon, c_startY, posX, deg_amm, focal_length);
+    applyRenderFrameCtxVariables(&render_thread_context_clng, app, player, map, horizon, c_endY, c_startY, posX, deg_amm, focal_length);
+    applyRenderFrameCtxVariables(&render_thread_context_flor, app, player, map, horizon, c_endY, c_startY, posX, deg_amm, focal_length);
+    
+    // pthread_cond_signal(&render_thread_context_clng) !!TODO!!
+
+
     if (data->type == T_NONE) return;
 
-    FaceAttr* attr = &face_types[data->type];
+    const FaceAttr* attr = &face_types[data->type];
 
     float mult = (float)map->mapT[coordToIndex(data->hit_tile[X], data->hit_tile[Y], MAP_MAX_X)].light_lvl/255.0;
     mult *= getFogSubtraction(dist)*FOG_SUB_AMM+1;
@@ -275,4 +300,60 @@ void renderText(App* app, ImageData* font, uint8_t tile_w, uint8_t tile_h, const
         }
         char_pos_x++;
     }
+}
+
+void* asyncRenderStripCeiling(void* ctx) {
+    RenderFrameThreadCtx* fctx = (RenderFrameThreadCtx*)ctx;
+
+    for(;;) {
+        pthread_mutex_lock(&fctx->mutex);
+
+        while(!fctx->is_ready && !fctx->should_exit) {
+            pthread_cond_wait(&fctx->cond_start, &fctx->mutex);
+        }
+
+        if (fctx->should_exit) break;
+
+        // clear start flag, unlock mutex to work in parallel
+        fctx->is_ready = false;
+        pthread_mutex_unlock(&fctx->mutex);
+
+        renderStripCeiling(fctx->app, fctx->player, fctx->map, fctx->horizon, fctx->clng_start, fctx->posX, fctx->deg_amm, fctx->focal_length);
+
+        // signal we are done
+        pthread_mutex_lock(&fctx->mutex);
+        fctx->is_done = true;
+        pthread_cond_signal(&fctx->cond_end);
+        pthread_mutex_unlock(&fctx->mutex);
+    }
+
+    return NULL;
+}
+
+void* asyncRenderStripFloor(void* ctx) {
+    RenderFrameThreadCtx* fctx = (RenderFrameThreadCtx*)ctx;
+
+    for(;;) {
+        pthread_mutex_lock(&fctx->mutex);
+
+        while(!fctx->is_ready && !fctx->should_exit) {
+            pthread_cond_wait(&fctx->cond_start, &fctx->mutex);
+        }
+
+        if (fctx->should_exit) break;
+
+        // clear start flag, unlock mutex to work in parallel
+        fctx->is_ready = false;
+        pthread_mutex_unlock(&fctx->mutex);
+
+        renderStripFloor(fctx->app, fctx->player, fctx->map, fctx->horizon, fctx->flor_start, fctx->posX, fctx->deg_amm, fctx->focal_length);
+
+        // signal we are done
+        pthread_mutex_lock(&fctx->mutex);
+        fctx->is_done = true;
+        pthread_cond_signal(&fctx->cond_end);
+        pthread_mutex_unlock(&fctx->mutex);
+    }
+
+    return NULL;
 }

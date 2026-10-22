@@ -27,7 +27,7 @@ void App_init(App* app) {
         printf("Failed to create renderer: %s\n", SDL_GetError());
         exit(1);
     }
-    app->screen_pixels = malloc(SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(uint32_t));
+    app->screen_pixels = malloc(SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(uint32_t)); // !!
 
     app->screen_texture = SDL_CreateTexture(app->renderer, 
                                             SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STREAMING, 
@@ -49,6 +49,8 @@ void App_free(App* app) {
 
 void App_setPixel(App* app, int x, int y, uint32_t color) {
     if (x < 0 || x > SCREEN_WIDTH || y < 0 || y > SCREEN_HEIGHT) return;
+
+    if ((color>>24 & 0xFF) != 0xFF) return;
 
     app->screen_pixels[y*SCREEN_WIDTH+x] = color;
 }

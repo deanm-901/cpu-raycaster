@@ -13,19 +13,19 @@ typedef enum __attribute__((__packed__)) _MapFaceType {
     T_TILES,
 } MapFaceType;
 
-// --WIP--
-//typedef struct _MapTileAttr {
-//    uint8_t light_level;
-//    uint8_t height;
-//} MapTileAttr
+typedef struct __attribute__((__packed__)) _MapTileAttr {
+    uint8_t light_lvl;
+    MapFaceType clng_type;
+    MapFaceType flor_type;
+} MapTileAttr;
+
+#define MapTileAttr_INIT(X) MapTileAttr X = {.light_lvl = 255, .flor_type = T_GRASS}
 
 typedef struct _Map {
     float wall_height;
     MapFaceType mapH[MAP_MAX_H];           // horizontal wall face type
     MapFaceType mapV[MAP_MAX_V];           // vertical wall face type
-    MapFaceType mapF[MAP_MAX_X*MAP_MAX_Y]; // floor face type
-    MapFaceType mapC[MAP_MAX_X*MAP_MAX_Y]; // ceiling face type
-    uint8_t mapLight[MAP_MAX_X*MAP_MAX_Y]; // lighting
+    MapTileAttr mapT[MAP_MAX_X*MAP_MAX_Y]; // map tile attributes
 } Map;
 
 typedef struct _FaceAttr {

@@ -6,11 +6,6 @@
 
 extern FaceAttr face_types[MAX_FACETYPE_COUNT];
 
-void prepareFrame(App* app) {
-    // SDL_SetRenderDrawColor(app->renderer, 50,50,50,255);
-    // SDL_RenderClear(app->renderer);
-}
-
 void presentFrame(App* app) {
     uint32_t *scaled_pixels = malloc((SCREEN_RESOLUTION_SCALE*SCREEN_WIDTH)*(SCREEN_RESOLUTION_SCALE*SCREEN_HEIGHT) * sizeof(uint32_t));
 
@@ -76,10 +71,18 @@ void renderLine(App* app, int p1[2], int p2[2], uint32_t color) {
     }
 }
 
+static float getFogSubtraction(float dist) {
+    if (dist > FOG_MAX_DIST) return -1.0f;
+
+    return 0.5*cos(dist*PI / FOG_MAX_DIST) - 0.5;
+}
+
 static void renderStripCeiling(App* app, Player* player, Map* map, double horizon, int start, int posX, float deg_amm, double focal_length) {
     if (start<=0) return;
 
     if (start>=SCREEN_HEIGHT) start = SCREEN_HEIGHT-1;
+
+    if (player->height > map->wall_height) return;
 
     ImageData* img = getImageData("atlas");
     const float ray_ang = player->a+deg_amm;
@@ -100,7 +103,7 @@ static void renderStripCeiling(App* app, Player* player, Map* map, double horizo
         
         if (ix >= MAP_MAX_X || ix < 0 || iy >= MAP_MAX_Y || iy < 0) continue;
 
-        const MapFaceType type = map->mapC[coordToIndex(ix, iy, MAP_MAX_X)];
+        const MapFaceType type = map->mapT[coordToIndex(ix, iy, MAP_MAX_X)].clng_type;
         const FaceAttr* attr = &face_types[type];
 
         if (type == T_NONE) continue;
@@ -108,13 +111,15 @@ static void renderStripCeiling(App* app, Player* player, Map* map, double horizo
         float texX = TEXTURE_ATLAS_W*(dx-floor(dx)), 
               texY = TEXTURE_ATLAS_H*(dy-floor(dy));
         
-        int atlasX = attr->atlas_pos[X] * TEXTURE_ATLAS_W;
-        int atlasY = attr->atlas_pos[Y] * TEXTURE_ATLAS_H;
+        const int atlasX = attr->atlas_pos[X] * TEXTURE_ATLAS_W;
+        const int atlasY = attr->atlas_pos[Y] * TEXTURE_ATLAS_H;
 
         if (texX >= TEXTURE_ATLAS_W) texX = TEXTURE_ATLAS_W - 1;
         if (texY >= TEXTURE_ATLAS_H) texY = TEXTURE_ATLAS_H - 1;
         
-        const float mult = (float)map->mapLight[coordToIndex(ix, iy, MAP_MAX_X)]/255.0;
+        float mult = (float)map->mapT[coordToIndex(ix, iy, MAP_MAX_X)].light_lvl/255.0;
+        mult *= getFogSubtraction(dz)*FOG_SUB_AMM+1;
+
         uint32_t pixel = img->pixels[coordToIndex(texX+atlasX, texY+atlasY, img->image.width)];
         pixel = ColorMult(pixel, mult, mult, mult, 1.0);
 
@@ -146,7 +151,7 @@ static void renderStripFloor(App* app, Player* player, Map* map, double horizon,
 
         if (ix >= MAP_MAX_X || ix < 0 || iy >= MAP_MAX_Y || iy < 0) continue;
 
-        const MapFaceType type = map->mapF[coordToIndex(ix, iy, MAP_MAX_X)];
+        const MapFaceType type = map->mapT[coordToIndex(ix, iy, MAP_MAX_X)].flor_type;
         const FaceAttr* attr = &face_types[type];
 
         if (type == T_NONE) continue;
@@ -154,13 +159,16 @@ static void renderStripFloor(App* app, Player* player, Map* map, double horizon,
         float texX = TEXTURE_ATLAS_W*(dx-floor(dx)), 
               texY = TEXTURE_ATLAS_H*(dy-floor(dy));
         
-        int atlasX = attr->atlas_pos[X] * TEXTURE_ATLAS_W;
-        int atlasY = attr->atlas_pos[Y] * TEXTURE_ATLAS_H;
+        const int atlasX = attr->atlas_pos[X] * TEXTURE_ATLAS_W;
+        const int atlasY = attr->atlas_pos[Y] * TEXTURE_ATLAS_H;
 
         if (texX >= TEXTURE_ATLAS_W) texX = TEXTURE_ATLAS_W - 1;
         if (texY >= TEXTURE_ATLAS_H) texY = TEXTURE_ATLAS_H - 1;
         
-        const float mult = (float)map->mapLight[coordToIndex(ix, iy, MAP_MAX_X)]/255.0;
+        float mult = (float)map->mapT[coordToIndex(ix, iy, MAP_MAX_X)].light_lvl/255.0;
+        mult *= getFogSubtraction(dz)*FOG_SUB_AMM+1;
+        if (mult<0) mult=0;
+
         uint32_t pixel = img->pixels[coordToIndex(texX+atlasX, texY+atlasY, img->image.width)];
         pixel = ColorMult(pixel, mult, mult, mult, 1.0);
 
@@ -176,7 +184,7 @@ void renderStrip(App* app, RayData* data, Player* player, Map* map, int posX, fl
     float dist = data->dist * cos(deg_amm);
 
     int startY = horizon - focal_length * (map->wall_height-player->height) / dist;
-    int endY   = horizon + focal_length * player->height / dist;
+    int endY   = horizon + focal_length * (player->height) / dist;
     int c_startY = (startY<0)?0:startY;
     int c_endY   = (endY>SCREEN_HEIGHT)?SCREEN_HEIGHT:endY;
     
@@ -189,7 +197,8 @@ void renderStrip(App* app, RayData* data, Player* player, Map* map, int posX, fl
 
     FaceAttr* attr = &face_types[data->type];
 
-    float mult = (float)map->mapLight[coordToIndex(data->hit_tile[X], data->hit_tile[Y], MAP_MAX_X)]/255.0;
+    float mult = (float)map->mapT[coordToIndex(data->hit_tile[X], data->hit_tile[Y], MAP_MAX_X)].light_lvl/255.0;
+    mult *= getFogSubtraction(dist)*FOG_SUB_AMM+1;
 
     ImageData* img = getImageData("atlas");
 
@@ -228,11 +237,12 @@ void renderImage(App* app, ImageData* data, Rect rect) {
     }
 }
 
-void renderText(App* app, ImageData* font, uint8_t tile_w, uint8_t tile_h, const char* text, uint32_t pos_x, uint32_t pos_y, int scale) {
+void renderText(App* app, ImageData* font, uint8_t tile_w, uint8_t tile_h, const char* text, uint32_t pos_x, uint32_t pos_y, int scale, uint32_t color) {
     const size_t text_len = strlen(text);
     const size_t font_wdth = font->image.width/tile_w;
 
-    printf("%i\n", ' ');
+    int char_pos_x = 0;
+    int char_pos_y = 0;
 
     for (int i=0;i<text_len;i++) { // each letter
         const uint8_t idx = (uint8_t)text[i] - 32;
@@ -240,20 +250,29 @@ void renderText(App* app, ImageData* font, uint8_t tile_w, uint8_t tile_h, const
         const uint16_t x = (idx%font_wdth) * tile_w;
         const uint16_t y = (idx/font_wdth) * tile_h;
 
+        if (text[i] == '\n') {
+            char_pos_y++;
+            char_pos_x=0;
+            continue;
+        }
+
         for (int px=0;px<tile_w;px++) {
             for (int py=0;py<tile_h;py++) { // each internal pixel
-                const uint32_t pixel = font->pixels[coordToIndex(x+px,y+py,font->image.width)];
+                uint32_t pixel = font->pixels[coordToIndex(x+px,y+py,font->image.width)];
 
                 for (int s=0;s<scale*scale;s++) { // each displayed pixel
                     const uint32_t s_x = s%scale;
                     const uint32_t s_y = s/scale;
 
-                    const uint32_t pix_pos_x = pos_x+s_x + px*scale + i*tile_w;
-                    const uint32_t pix_pos_y = pos_y+s_y + py*scale;
+                    const uint32_t pix_pos_x = pos_x+s_x + px*scale + char_pos_x*tile_w*scale;
+                    const uint32_t pix_pos_y = pos_y+s_y + py*scale + char_pos_y*tile_h*scale;
+
+                    pixel = ColorMult(pixel, color);
 
                     App_setPixel(app, pix_pos_x, pix_pos_y, pixel);
                 }
             }
         }
+        char_pos_x++;
     }
 }

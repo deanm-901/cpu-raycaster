@@ -1,5 +1,4 @@
-// TODO 0: Reformat map tile components
-// TODO 1: implement text
+// TODO 0: Add Sprites
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -31,9 +30,14 @@ Uint64 TIME_NOW = 0;
 Uint64 TIME_LAST = 0;
 // in seconds / frame
 double dt = 1;
+char debug_text[64];
 
-RayData ray_data[(int)(SCREEN_WIDTH/RAYCAST_RES)];
+#define FPS_BUCKET_SIZE 16
+float fps_bucket[FPS_BUCKET_SIZE];
+size_t fps_bucket_count = 0;
+float fps_avg = 0.0;
 
+RayData ray_data[SCREEN_WIDTH/RAYCAST_RES];
 
 static void renderBackground() {
     double focal_length = SCREEN_WIDTH / (2.0 * tan(FOV / 2.0));
@@ -182,13 +186,37 @@ static void initImages() {
     setImageHolderIndex(png_sky, png_sky_size, "sky");
 }
 
+static void initMapDefaults() {
+    for (int i=0;i<MAP_MAX_X*MAP_MAX_Y;i++) {
+        MapTileAttr_INIT(def);
+        map.mapT[i] = def;
+    }
+}
+
+static void renderDebugText() {
+    // fps
+    float current_fps = 1.0/dt;
+    fps_bucket[fps_bucket_count++] = current_fps;
+
+    if (fps_bucket_count >= FPS_BUCKET_SIZE) { // print average
+        float fps_sum = 0.0f;
+        for (int i=0;i<FPS_BUCKET_SIZE;i++) fps_sum += fps_bucket[i];
+
+        fps_avg = fps_sum/FPS_BUCKET_SIZE;
+        fps_bucket_count = 0;
+    }
+
+    snprintf(debug_text, sizeof(debug_text), "FPS: %0.2f\nPOS: (%0.2f,%0.2f)", fps_avg, player.pos[X], player.pos[Y]);
+
+    renderText(&app, getImageData("font1"), 8, 8, debug_text, MAP_MAX_X*MAP_REP_SCALE, 0, 1, C_WHITE);
+}
+
 int main(int argc, char* argv[]) {
     int debug = DEBUG;
 
     App_init(&app);
 
-    memset(map.mapF, T_GRASS, sizeof(map.mapF));
-    memset(map.mapLight, 0xFF, sizeof(map.mapLight));
+    initMapDefaults();
 
     for(int i=0;i<8;i++){ 
         map.mapH[i] = T_BRICK;
@@ -198,14 +226,14 @@ int main(int argc, char* argv[]) {
         map.mapV[17*i+8] = T_BRICK;
 
         for (int j=0;j<8;j++) {
-            map.mapC[i*MAP_MAX_X+j] = T_BRICK;
-            map.mapF[i*MAP_MAX_X+j] = T_TILES;
-            map.mapLight[i*MAP_MAX_X+j] = 255*pow(0.8,j+i);
+            map.mapT[i*MAP_MAX_X+j].clng_type = T_BRICK;
+            map.mapT[i*MAP_MAX_X+j].flor_type = T_TILES;
+            map.mapT[i*MAP_MAX_X+j].light_lvl = 255*pow(0.85,j+i);
         }
     }
     map.mapV[17*3+8] = T_NONE;
     map.mapH[20] = T_HOMER;
-    map.mapH[21] = T_BRICK;
+    map.mapH[21] = T_PIZZA;
     map.mapV[21] = T_BRICK;
     map.mapV[38] = T_BRICK;
     map.mapV[39] = T_BRICK;
@@ -246,14 +274,15 @@ int main(int argc, char* argv[]) {
             renderRepWalls();
 
             renderRepPlayer();
+
+            renderDebugText();
         }
 
-        renderText(&app, getImageData("font1"), 8, 8, "Hello, World!", 0, 0, 1);
 
         presentFrame(&app);
 
         // delays every frame by ms; helps free CPU time
-        SDL_Delay(4);
+        SDL_Delay(2);
     }
 
 }

@@ -6,7 +6,7 @@
 #define SCREEN_RESOLUTION_SCALE 2
 #define SCREEN_NAME "Raycaster"
 
-#define MAP_REP_SCALE 10
+#define MAP_REP_SCALE 8
 #define MAP_REP_PLAYER_SIZE 2
 
 #define MAP_MAX_X 16
@@ -27,7 +27,7 @@
 #define RAD_TO_DEG 57.29578
 
 #define FOV (60.0 * DEG_TO_RAD)
-#define RAYCAST_RES 1.0
+#define RAYCAST_RES 1
 
 #define MAX_IMAGE_COUNT 128
 #define MAX_FACETYPE_COUNT 128
@@ -36,6 +36,9 @@
 
 #define TEXTURE_ATLAS_W 32
 #define TEXTURE_ATLAS_H 32
+
+#define FOG_MAX_DIST 20.0f
+#define FOG_SUB_AMM 0.4f
 
 // settings
 #define DEBUG 1

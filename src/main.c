@@ -41,9 +41,8 @@ float fps_avg = 0.0;
 
 RayData ray_data[SCREEN_WIDTH];
 
-RenderFrameThreadCtx render_thread_context1 = {.startX=0,.endX=SCREEN_WIDTH/2}, 
-                     render_thread_context2 = {.startX=SCREEN_WIDTH/2,.endX=SCREEN_WIDTH};
-pthread_t rend_thread_chunk1, rend_thread_chunk2;
+#define REND_THREAD_AMM 4
+RenderThread render_threads[REND_THREAD_AMM];
 
 static void renderBackground() {
     double focal_length = SCREEN_WIDTH / (2.0 * tan(FOV / 2.0));
@@ -158,38 +157,10 @@ static void raycast() {
     }
 
     //submit jobs
-    pthread_mutex_lock(&render_thread_context1.mutex);
-
-    render_thread_context1.is_done = false;
-    render_thread_context1.is_ready = true;
-    pthread_cond_signal(&render_thread_context1.cond_start);
-
-    pthread_mutex_unlock(&render_thread_context1.mutex);
-
-
-    pthread_mutex_lock(&render_thread_context2.mutex);
-
-    render_thread_context2.is_done = false;
-    render_thread_context2.is_ready = true;
-    pthread_cond_signal(&render_thread_context2.cond_start);
-
-    pthread_mutex_unlock(&render_thread_context2.mutex);
+    for (int i=0;i<REND_THREAD_AMM;i++) RenderThreadSubmitJob(&render_threads[i]);
 
     // wait
-
-    pthread_mutex_lock(&render_thread_context1.mutex);
-    while(!render_thread_context1.is_done) {
-        pthread_cond_wait(&render_thread_context1.cond_end, &render_thread_context1.mutex);
-    }
-    pthread_mutex_unlock(&render_thread_context1.mutex);
-
-    
-    pthread_mutex_lock(&render_thread_context2.mutex);
-    while(!render_thread_context2.is_done) {
-        pthread_cond_wait(&render_thread_context2.cond_end, &render_thread_context2.mutex);
-    }
-    pthread_mutex_unlock(&render_thread_context2.mutex);
-
+    for (int i=0;i<REND_THREAD_AMM;i++) RenderThreadAwaitCompletion(&render_threads[i]);
 }
 
 static void renderRaycast() {
@@ -197,7 +168,6 @@ static void renderRaycast() {
 
     for (int i=0; i<amm; i++) {
         double deg_amm = i*FOV/amm;
-
     }
 }
 
@@ -246,41 +216,15 @@ static void renderDebugText() {
 }
 
 static void initThreads() {
-    pthread_mutex_init(&render_thread_context1.mutex, NULL);
-    pthread_cond_init(&render_thread_context1.cond_end, NULL);
-    pthread_cond_init(&render_thread_context1.cond_start, NULL);
+    static int pixAmm = SCREEN_WIDTH/REND_THREAD_AMM;
 
-    pthread_mutex_init(&render_thread_context2.mutex, NULL);
-    pthread_cond_init(&render_thread_context2.cond_end, NULL);
-    pthread_cond_init(&render_thread_context2.cond_start, NULL);
-
-    pthread_create(&rend_thread_chunk1, NULL, asyncRenderStripChunk, &render_thread_context1);
-    pthread_create(&rend_thread_chunk2, NULL, asyncRenderStripChunk,   &render_thread_context2);
+    for (int i=0;i<REND_THREAD_AMM;i++)
+        InitRenderThread(&render_threads[i], pixAmm*i, pixAmm*(i+1), asyncRenderStripChunk);
 }
 
 static void destroyThreads() {
-    pthread_mutex_lock(&render_thread_context1.mutex);
-    render_thread_context1.should_exit = 1;
-    pthread_cond_signal(&render_thread_context1.cond_start);
-    pthread_mutex_unlock(&render_thread_context1.mutex);
-
-    pthread_mutex_destroy(&render_thread_context1.mutex);
-    pthread_cond_destroy(&render_thread_context1.cond_end);
-    pthread_cond_destroy(&render_thread_context1.cond_start);
-
-    
-    pthread_mutex_lock(&render_thread_context2.mutex);
-    render_thread_context2.should_exit = 1;
-    pthread_cond_signal(&render_thread_context2.cond_start);
-    pthread_mutex_unlock(&render_thread_context2.mutex);
-
-    pthread_mutex_destroy(&render_thread_context2.mutex);
-    pthread_cond_destroy(&render_thread_context2.cond_end);
-    pthread_cond_destroy(&render_thread_context2.cond_start);
-
-    
-    pthread_join(rend_thread_chunk1, NULL);
-    pthread_join(rend_thread_chunk2, NULL);
+    for (int i=0;i<REND_THREAD_AMM;i++)
+        DestroyRenderThread(&render_threads[i]);
 }
 
 static void cleanup() {

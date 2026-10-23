@@ -13,8 +13,6 @@ typedef struct _AsyncRenderCtx {
 } AsyncRenderCtx;
 
 typedef struct _RenderFrameThreadCtx {
-    AsyncRenderCtx strips[SCREEN_WIDTH];
-
     int is_ready;
     int is_done;
     int should_exit;
@@ -25,5 +23,16 @@ typedef struct _RenderFrameThreadCtx {
     pthread_cond_t cond_start;
     pthread_cond_t cond_end;
 } RenderFrameThreadCtx;
+
+typedef struct _RenderThread {
+    RenderFrameThreadCtx ctx;
+    pthread_t thread;
+} RenderThread;
+
+void DestroyRenderThread(RenderThread* rthread);
+void InitRenderThread(RenderThread* rthread, int startX, int endX, void *(*func)(void *));
+
+void RenderThreadSubmitJob(RenderThread* rthread);
+void RenderThreadAwaitCompletion(RenderThread* rthread);
 
 #endif

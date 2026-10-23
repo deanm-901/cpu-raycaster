@@ -180,6 +180,8 @@ static void renderStripFloor(App* app, Player* player, Map* map, double horizon,
 extern pthread_t rend_thread_chunk1, rend_thread_chunk2;
 extern RenderFrameThreadCtx render_thread_context1, render_thread_context2;
 
+AsyncRenderCtx render_strips[SCREEN_WIDTH];
+
 void renderStrip(App* app, RayData* data, Player* player, Map* map, int posX, float deg_amm) {
 
     const double focal_length = SCREEN_WIDTH / (2.0 * tan(FOV / 2.0));
@@ -195,12 +197,6 @@ void renderStrip(App* app, RayData* data, Player* player, Map* map, int posX, fl
     const int lineH  = endY-startY;
     const int c_lineH = c_endY-c_startY;
 
-    // renderStripFloor(app, player, map, horizon, c_endY, posX, deg_amm, focal_length);
-    // renderStripCeiling(app, player, map, horizon, c_startY, posX, deg_amm, focal_length);
-
-    // pthread_mutex_lock(&render_thread_context_clng.mutex);
-    // pthread_mutex_lock(&render_thread_context_flor.mutex);
-
     AsyncRenderCtx ctx = {
         .app = app,
         .data = data,
@@ -213,20 +209,7 @@ void renderStrip(App* app, RayData* data, Player* player, Map* map, int posX, fl
         .focal_length = focal_length,
         .posX = posX,
     };
-    render_thread_context1.strips[posX] = ctx;
-    render_thread_context2.strips[posX] = ctx;
-    
-    // pthread_cond_signal(&render_thread_context_clng.cond_start);
-    // pthread_cond_signal(&render_thread_context_flor.cond_start);
-
-    // while(!render_thread_context_clng.is_done || !render_thread_context_flor.is_done) {
-    //     pthread_cond_wait(&render_thread_context_clng.cond_end, &render_thread_context_clng.mutex);
-    //     pthread_cond_wait(&render_thread_context_flor.cond_end, &render_thread_context_flor.mutex);
-    // }
-
-    // pthread_mutex_unlock(&render_thread_context_clng.mutex);
-    // pthread_mutex_unlock(&render_thread_context_flor.mutex);
-
+    render_strips[posX] = ctx;
 
     if (data->type == T_NONE) return;
 
@@ -330,24 +313,24 @@ void* asyncRenderStripChunk(void* ctx) {
 
         for (int i=fctx->startX;i<fctx->endX;i++) {
             renderStripFloor(
-                fctx->strips[i].app, 
-                fctx->strips[i].player, 
-                fctx->strips[i].map, 
-                fctx->strips[i].horizon, 
-                fctx->strips[i].flor_start, 
-                fctx->strips[i].posX, 
-                fctx->strips[i].deg_amm, 
-                fctx->strips[i].focal_length
+                render_strips[i].app, 
+                render_strips[i].player, 
+                render_strips[i].map, 
+                render_strips[i].horizon, 
+                render_strips[i].flor_start, 
+                render_strips[i].posX, 
+                render_strips[i].deg_amm, 
+                render_strips[i].focal_length
             );
             renderStripCeiling(
-                fctx->strips[i].app, 
-                fctx->strips[i].player, 
-                fctx->strips[i].map, 
-                fctx->strips[i].horizon, 
-                fctx->strips[i].clng_start, 
-                fctx->strips[i].posX, 
-                fctx->strips[i].deg_amm, 
-                fctx->strips[i].focal_length
+                render_strips[i].app, 
+                render_strips[i].player, 
+                render_strips[i].map, 
+                render_strips[i].horizon, 
+                render_strips[i].clng_start, 
+                render_strips[i].posX, 
+                render_strips[i].deg_amm, 
+                render_strips[i].focal_length
             );
         }
 

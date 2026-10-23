@@ -41,8 +41,9 @@ float fps_avg = 0.0;
 
 RayData ray_data[SCREEN_WIDTH];
 
-RenderFrameThreadCtx render_thread_context_clng, render_thread_context_flor;
-pthread_t clng_rend_thread, flor_rend_thread;
+RenderFrameThreadCtx render_thread_context1 = {.startX=0,.endX=SCREEN_WIDTH/2}, 
+                     render_thread_context2 = {.startX=SCREEN_WIDTH/2,.endX=SCREEN_WIDTH};
+pthread_t rend_thread_chunk1, rend_thread_chunk2;
 
 static void renderBackground() {
     double focal_length = SCREEN_WIDTH / (2.0 * tan(FOV / 2.0));
@@ -157,37 +158,37 @@ static void raycast() {
     }
 
     //submit jobs
-    pthread_mutex_lock(&render_thread_context_clng.mutex);
+    pthread_mutex_lock(&render_thread_context1.mutex);
 
-    render_thread_context_clng.is_done = false;
-    render_thread_context_clng.is_ready = true;
-    pthread_cond_signal(&render_thread_context_clng.cond_start);
+    render_thread_context1.is_done = false;
+    render_thread_context1.is_ready = true;
+    pthread_cond_signal(&render_thread_context1.cond_start);
 
-    pthread_mutex_unlock(&render_thread_context_clng.mutex);
+    pthread_mutex_unlock(&render_thread_context1.mutex);
 
 
-    pthread_mutex_lock(&render_thread_context_flor.mutex);
+    pthread_mutex_lock(&render_thread_context2.mutex);
 
-    render_thread_context_flor.is_done = false;
-    render_thread_context_flor.is_ready = true;
-    pthread_cond_signal(&render_thread_context_flor.cond_start);
+    render_thread_context2.is_done = false;
+    render_thread_context2.is_ready = true;
+    pthread_cond_signal(&render_thread_context2.cond_start);
 
-    pthread_mutex_unlock(&render_thread_context_flor.mutex);
+    pthread_mutex_unlock(&render_thread_context2.mutex);
 
     // wait
 
-    pthread_mutex_lock(&render_thread_context_clng.mutex);
-    while(!render_thread_context_clng.is_done) {
-        pthread_cond_wait(&render_thread_context_clng.cond_end, &render_thread_context_clng.mutex);
+    pthread_mutex_lock(&render_thread_context1.mutex);
+    while(!render_thread_context1.is_done) {
+        pthread_cond_wait(&render_thread_context1.cond_end, &render_thread_context1.mutex);
     }
-    pthread_mutex_unlock(&render_thread_context_clng.mutex);
+    pthread_mutex_unlock(&render_thread_context1.mutex);
 
     
-    pthread_mutex_lock(&render_thread_context_flor.mutex);
-    while(!render_thread_context_flor.is_done) {
-        pthread_cond_wait(&render_thread_context_flor.cond_end, &render_thread_context_flor.mutex);
+    pthread_mutex_lock(&render_thread_context2.mutex);
+    while(!render_thread_context2.is_done) {
+        pthread_cond_wait(&render_thread_context2.cond_end, &render_thread_context2.mutex);
     }
-    pthread_mutex_unlock(&render_thread_context_flor.mutex);
+    pthread_mutex_unlock(&render_thread_context2.mutex);
 
 }
 
@@ -245,41 +246,41 @@ static void renderDebugText() {
 }
 
 static void initThreads() {
-    pthread_mutex_init(&render_thread_context_clng.mutex, NULL);
-    pthread_cond_init(&render_thread_context_clng.cond_end, NULL);
-    pthread_cond_init(&render_thread_context_clng.cond_start, NULL);
+    pthread_mutex_init(&render_thread_context1.mutex, NULL);
+    pthread_cond_init(&render_thread_context1.cond_end, NULL);
+    pthread_cond_init(&render_thread_context1.cond_start, NULL);
 
-    pthread_mutex_init(&render_thread_context_flor.mutex, NULL);
-    pthread_cond_init(&render_thread_context_flor.cond_end, NULL);
-    pthread_cond_init(&render_thread_context_flor.cond_start, NULL);
+    pthread_mutex_init(&render_thread_context2.mutex, NULL);
+    pthread_cond_init(&render_thread_context2.cond_end, NULL);
+    pthread_cond_init(&render_thread_context2.cond_start, NULL);
 
-    pthread_create(&clng_rend_thread, NULL, asyncRenderStripCeiling, &render_thread_context_clng);
-    pthread_create(&flor_rend_thread, NULL, asyncRenderStripFloor,   &render_thread_context_flor);
+    pthread_create(&rend_thread_chunk1, NULL, asyncRenderStripChunk, &render_thread_context1);
+    pthread_create(&rend_thread_chunk2, NULL, asyncRenderStripChunk,   &render_thread_context2);
 }
 
 static void destroyThreads() {
-    pthread_mutex_lock(&render_thread_context_clng.mutex);
-    render_thread_context_clng.should_exit = 1;
-    pthread_cond_signal(&render_thread_context_clng.cond_start);
-    pthread_mutex_unlock(&render_thread_context_clng.mutex);
+    pthread_mutex_lock(&render_thread_context1.mutex);
+    render_thread_context1.should_exit = 1;
+    pthread_cond_signal(&render_thread_context1.cond_start);
+    pthread_mutex_unlock(&render_thread_context1.mutex);
 
-    pthread_mutex_destroy(&render_thread_context_clng.mutex);
-    pthread_cond_destroy(&render_thread_context_clng.cond_end);
-    pthread_cond_destroy(&render_thread_context_clng.cond_start);
-
-    
-    pthread_mutex_lock(&render_thread_context_flor.mutex);
-    render_thread_context_flor.should_exit = 1;
-    pthread_cond_signal(&render_thread_context_flor.cond_start);
-    pthread_mutex_unlock(&render_thread_context_flor.mutex);
-
-    pthread_mutex_destroy(&render_thread_context_flor.mutex);
-    pthread_cond_destroy(&render_thread_context_flor.cond_end);
-    pthread_cond_destroy(&render_thread_context_flor.cond_start);
+    pthread_mutex_destroy(&render_thread_context1.mutex);
+    pthread_cond_destroy(&render_thread_context1.cond_end);
+    pthread_cond_destroy(&render_thread_context1.cond_start);
 
     
-    pthread_join(clng_rend_thread, NULL);
-    pthread_join(flor_rend_thread, NULL);
+    pthread_mutex_lock(&render_thread_context2.mutex);
+    render_thread_context2.should_exit = 1;
+    pthread_cond_signal(&render_thread_context2.cond_start);
+    pthread_mutex_unlock(&render_thread_context2.mutex);
+
+    pthread_mutex_destroy(&render_thread_context2.mutex);
+    pthread_cond_destroy(&render_thread_context2.cond_end);
+    pthread_cond_destroy(&render_thread_context2.cond_start);
+
+    
+    pthread_join(rend_thread_chunk1, NULL);
+    pthread_join(rend_thread_chunk2, NULL);
 }
 
 static void cleanup() {

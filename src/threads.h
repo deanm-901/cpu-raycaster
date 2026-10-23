@@ -19,6 +19,8 @@ typedef struct _RenderFrameThreadCtx {
     int is_done;
     int should_exit;
 
+    int startX, endX;
+
     pthread_mutex_t mutex;
     pthread_cond_t cond_start;
     pthread_cond_t cond_end;

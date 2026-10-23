@@ -177,8 +177,8 @@ static void renderStripFloor(App* app, Player* player, Map* map, double horizon,
     }
 }
 
-extern pthread_t clng_rend_thread, flor_rend_thread;
-extern RenderFrameThreadCtx render_thread_context_clng, render_thread_context_flor;
+extern pthread_t rend_thread_chunk1, rend_thread_chunk2;
+extern RenderFrameThreadCtx render_thread_context1, render_thread_context2;
 
 void renderStrip(App* app, RayData* data, Player* player, Map* map, int posX, float deg_amm) {
 
@@ -213,8 +213,8 @@ void renderStrip(App* app, RayData* data, Player* player, Map* map, int posX, fl
         .focal_length = focal_length,
         .posX = posX,
     };
-    render_thread_context_clng.strips[posX] = ctx;
-    render_thread_context_flor.strips[posX] = ctx;
+    render_thread_context1.strips[posX] = ctx;
+    render_thread_context2.strips[posX] = ctx;
     
     // pthread_cond_signal(&render_thread_context_clng.cond_start);
     // pthread_cond_signal(&render_thread_context_flor.cond_start);
@@ -312,7 +312,7 @@ void renderText(App* app, ImageData* font, uint8_t tile_w, uint8_t tile_h, const
     }
 }
 
-void* asyncRenderStripCeiling(void* ctx) {
+void* asyncRenderStripChunk(void* ctx) {
     RenderFrameThreadCtx* fctx = (RenderFrameThreadCtx*)ctx;
 
     for(;;) {
@@ -328,52 +328,23 @@ void* asyncRenderStripCeiling(void* ctx) {
         fctx->is_ready = false;
         pthread_mutex_unlock(&fctx->mutex);
 
-        for (int i=0;i<SCREEN_WIDTH;i++) {
-            renderStripCeiling(
-                fctx->strips[i].app, 
-                fctx->strips[i].player, 
-                fctx->strips[i].map, 
-                fctx->strips[i].horizon, 
-                fctx->strips[i].clng_start, 
-                fctx->strips[i].posX, 
-                fctx->strips[i].deg_amm, 
-                fctx->strips[i].focal_length
-            );
-        }
-
-        // signal we are done
-        pthread_mutex_lock(&fctx->mutex);
-        fctx->is_done = true;
-        pthread_cond_signal(&fctx->cond_end);
-        pthread_mutex_unlock(&fctx->mutex);
-    }
-
-    return NULL;
-}
-
-void* asyncRenderStripFloor(void* ctx) {
-    RenderFrameThreadCtx* fctx = (RenderFrameThreadCtx*)ctx;
-
-    for(;;) {
-        pthread_mutex_lock(&fctx->mutex);
-
-        while(!fctx->is_ready && !fctx->should_exit) {
-            pthread_cond_wait(&fctx->cond_start, &fctx->mutex);
-        }
-
-        if (fctx->should_exit) break;
-
-        // clear start flag, unlock mutex to work in parallel
-        fctx->is_ready = false;
-        pthread_mutex_unlock(&fctx->mutex);
-
-        for (int i=0;i<SCREEN_WIDTH;i++) {
+        for (int i=fctx->startX;i<fctx->endX;i++) {
             renderStripFloor(
                 fctx->strips[i].app, 
                 fctx->strips[i].player, 
                 fctx->strips[i].map, 
                 fctx->strips[i].horizon, 
                 fctx->strips[i].flor_start, 
+                fctx->strips[i].posX, 
+                fctx->strips[i].deg_amm, 
+                fctx->strips[i].focal_length
+            );
+            renderStripCeiling(
+                fctx->strips[i].app, 
+                fctx->strips[i].player, 
+                fctx->strips[i].map, 
+                fctx->strips[i].horizon, 
+                fctx->strips[i].clng_start, 
                 fctx->strips[i].posX, 
                 fctx->strips[i].deg_amm, 
                 fctx->strips[i].focal_length

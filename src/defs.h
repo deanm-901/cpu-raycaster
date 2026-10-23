@@ -21,6 +21,9 @@
 
 #define PI 3.14159
 
+#define true 1
+#define false 0
+
 #define RAYCAST_MAX_DIST 100.0
 
 #define DEG_TO_RAD 0.0174532925

@@ -177,21 +177,6 @@ static void renderStripFloor(App* app, Player* player, Map* map, double horizon,
     }
 }
 
-static void applyRenderFrameCtxVariables(RenderFrameThreadCtx* ctx, App* app, Player* player, Map* map, double horizon, int clng_start, int flor_start, int posX, float deg_amm, double focal_length) {
-    ctx->app = app;
-    ctx->player = player;
-    ctx->map = map;
-    ctx->horizon = horizon;
-    ctx->clng_start = clng_start;
-    ctx->flor_start = flor_start;
-    ctx->posX = posX;
-    ctx->deg_amm = deg_amm;
-    ctx->focal_length = focal_length;
-
-    ctx->is_ready = true;
-    ctx->is_done = false;
-}
-
 extern pthread_t clng_rend_thread, flor_rend_thread;
 extern RenderFrameThreadCtx render_thread_context_clng, render_thread_context_flor;
 
@@ -212,10 +197,35 @@ void renderStrip(App* app, RayData* data, Player* player, Map* map, int posX, fl
 
     // renderStripFloor(app, player, map, horizon, c_endY, posX, deg_amm, focal_length);
     // renderStripCeiling(app, player, map, horizon, c_startY, posX, deg_amm, focal_length);
-    applyRenderFrameCtxVariables(&render_thread_context_clng, app, player, map, horizon, c_endY, c_startY, posX, deg_amm, focal_length);
-    applyRenderFrameCtxVariables(&render_thread_context_flor, app, player, map, horizon, c_endY, c_startY, posX, deg_amm, focal_length);
+
+    // pthread_mutex_lock(&render_thread_context_clng.mutex);
+    // pthread_mutex_lock(&render_thread_context_flor.mutex);
+
+    AsyncRenderCtx ctx = {
+        .app = app,
+        .data = data,
+        .player = player,
+        .map = map,
+        .horizon = horizon,
+        .clng_start = c_startY,
+        .flor_start = c_endY,
+        .deg_amm = deg_amm,
+        .focal_length = focal_length,
+        .posX = posX,
+    };
+    render_thread_context_clng.strips[posX] = ctx;
+    render_thread_context_flor.strips[posX] = ctx;
     
-    // pthread_cond_signal(&render_thread_context_clng) !!TODO!!
+    // pthread_cond_signal(&render_thread_context_clng.cond_start);
+    // pthread_cond_signal(&render_thread_context_flor.cond_start);
+
+    // while(!render_thread_context_clng.is_done || !render_thread_context_flor.is_done) {
+    //     pthread_cond_wait(&render_thread_context_clng.cond_end, &render_thread_context_clng.mutex);
+    //     pthread_cond_wait(&render_thread_context_flor.cond_end, &render_thread_context_flor.mutex);
+    // }
+
+    // pthread_mutex_unlock(&render_thread_context_clng.mutex);
+    // pthread_mutex_unlock(&render_thread_context_flor.mutex);
 
 
     if (data->type == T_NONE) return;
@@ -318,7 +328,18 @@ void* asyncRenderStripCeiling(void* ctx) {
         fctx->is_ready = false;
         pthread_mutex_unlock(&fctx->mutex);
 
-        renderStripCeiling(fctx->app, fctx->player, fctx->map, fctx->horizon, fctx->clng_start, fctx->posX, fctx->deg_amm, fctx->focal_length);
+        for (int i=0;i<SCREEN_WIDTH;i++) {
+            renderStripCeiling(
+                fctx->strips[i].app, 
+                fctx->strips[i].player, 
+                fctx->strips[i].map, 
+                fctx->strips[i].horizon, 
+                fctx->strips[i].clng_start, 
+                fctx->strips[i].posX, 
+                fctx->strips[i].deg_amm, 
+                fctx->strips[i].focal_length
+            );
+        }
 
         // signal we are done
         pthread_mutex_lock(&fctx->mutex);
@@ -346,7 +367,18 @@ void* asyncRenderStripFloor(void* ctx) {
         fctx->is_ready = false;
         pthread_mutex_unlock(&fctx->mutex);
 
-        renderStripFloor(fctx->app, fctx->player, fctx->map, fctx->horizon, fctx->flor_start, fctx->posX, fctx->deg_amm, fctx->focal_length);
+        for (int i=0;i<SCREEN_WIDTH;i++) {
+            renderStripFloor(
+                fctx->strips[i].app, 
+                fctx->strips[i].player, 
+                fctx->strips[i].map, 
+                fctx->strips[i].horizon, 
+                fctx->strips[i].flor_start, 
+                fctx->strips[i].posX, 
+                fctx->strips[i].deg_amm, 
+                fctx->strips[i].focal_length
+            );
+        }
 
         // signal we are done
         pthread_mutex_lock(&fctx->mutex);

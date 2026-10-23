@@ -39,7 +39,7 @@ float fps_bucket[FPS_BUCKET_SIZE];
 size_t fps_bucket_count = 0;
 float fps_avg = 0.0;
 
-RayData ray_data[SCREEN_WIDTH/RAYCAST_RES];
+RayData ray_data[SCREEN_WIDTH];
 
 RenderFrameThreadCtx render_thread_context_clng, render_thread_context_flor;
 pthread_t clng_rend_thread, flor_rend_thread;
@@ -146,7 +146,7 @@ static void handleInput() {
 }
 
 static void raycast() {
-    int amm = sizeof(ray_data)/sizeof(RayData);
+    const int amm = SCREEN_WIDTH;
 
     for (int i=0; i<amm; i++) {
         double deg_amm = i*FOV/amm;
@@ -155,6 +155,40 @@ static void raycast() {
 
         renderStrip(&app, &ray_data[i], &player, &map, i, deg_amm-(FOV/2.0));
     }
+
+    //submit jobs
+    pthread_mutex_lock(&render_thread_context_clng.mutex);
+
+    render_thread_context_clng.is_done = false;
+    render_thread_context_clng.is_ready = true;
+    pthread_cond_signal(&render_thread_context_clng.cond_start);
+
+    pthread_mutex_unlock(&render_thread_context_clng.mutex);
+
+
+    pthread_mutex_lock(&render_thread_context_flor.mutex);
+
+    render_thread_context_flor.is_done = false;
+    render_thread_context_flor.is_ready = true;
+    pthread_cond_signal(&render_thread_context_flor.cond_start);
+
+    pthread_mutex_unlock(&render_thread_context_flor.mutex);
+
+    // wait
+
+    pthread_mutex_lock(&render_thread_context_clng.mutex);
+    while(!render_thread_context_clng.is_done) {
+        pthread_cond_wait(&render_thread_context_clng.cond_end, &render_thread_context_clng.mutex);
+    }
+    pthread_mutex_unlock(&render_thread_context_clng.mutex);
+
+    
+    pthread_mutex_lock(&render_thread_context_flor.mutex);
+    while(!render_thread_context_flor.is_done) {
+        pthread_cond_wait(&render_thread_context_flor.cond_end, &render_thread_context_flor.mutex);
+    }
+    pthread_mutex_unlock(&render_thread_context_flor.mutex);
+
 }
 
 static void renderRaycast() {

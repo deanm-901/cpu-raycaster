@@ -2,7 +2,7 @@
 #include "render.h"
 #include <pthread.h>
 
-typedef struct _RenderFrameThreadCtx {
+typedef struct _AsyncRenderCtx {
     App* app;
     RayData* data;
     Player* player;
@@ -10,6 +10,10 @@ typedef struct _RenderFrameThreadCtx {
     int posX, clng_start, flor_start;
     double focal_length, horizon;
     float deg_amm;
+} AsyncRenderCtx;
+
+typedef struct _RenderFrameThreadCtx {
+    AsyncRenderCtx strips[SCREEN_WIDTH];
 
     int is_ready;
     int is_done;
@@ -18,7 +22,6 @@ typedef struct _RenderFrameThreadCtx {
     pthread_mutex_t mutex;
     pthread_cond_t cond_start;
     pthread_cond_t cond_end;
-
 } RenderFrameThreadCtx;
 
 #endif

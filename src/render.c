@@ -8,21 +8,11 @@
 extern FaceAttr face_types[MAX_FACETYPE_COUNT];
 
 void presentFrame(App* app) {
-    uint32_t *scaled_pixels = malloc((SCREEN_RESOLUTION_SCALE*SCREEN_WIDTH)*(SCREEN_RESOLUTION_SCALE*SCREEN_HEIGHT) * sizeof(uint32_t));
-
-    for (int x=0;x<SCREEN_WIDTH*SCREEN_RESOLUTION_SCALE;x++) {
-        for (int y=0;y<SCREEN_HEIGHT*SCREEN_RESOLUTION_SCALE;y++) {
-            scaled_pixels[coordToIndex(x,y,SCREEN_WIDTH*SCREEN_RESOLUTION_SCALE)] = app->screen_pixels[coordToIndex((int)x/SCREEN_RESOLUTION_SCALE, (int)y/SCREEN_RESOLUTION_SCALE, SCREEN_WIDTH)];
-        }
-    }
-
-    SDL_UpdateTexture(app->screen_texture, NULL, scaled_pixels, SCREEN_WIDTH*SCREEN_RESOLUTION_SCALE * sizeof(uint32_t));
+    SDL_UpdateTexture(app->screen_texture, NULL, app->screen_pixels, SCREEN_WIDTH * sizeof(uint32_t));
     SDL_RenderClear(app->renderer);
     SDL_RenderCopy(app->renderer, app->screen_texture, NULL, NULL);
 
     SDL_RenderPresent(app->renderer);
-
-    free(scaled_pixels);
 }
 
 int pixelBackground(int x, int y, double ticks) {
@@ -91,7 +81,7 @@ static void renderStripCeiling(App* app, Player* player, Map* map, double horizo
     const float ray_sin = sin(ray_ang);
     const float cos_deg_amm = cos(deg_amm);
 
-    const double dist_scale = focal_length * (map->wall_height-player->height) / cos_deg_amm;
+    const double dist_scale = focal_length * (map->wall_height-player->height-player->height_disp) / cos_deg_amm;
 
     const double px = player->pos[X], py = player->pos[Y];
 
@@ -139,7 +129,7 @@ static void renderStripFloor(App* app, Player* player, Map* map, double horizon,
     const float ray_sin = sin(ray_ang);
     const float cos_deg_amm = cos(deg_amm);
 
-    const double dist_scale = focal_length * player->height / cos_deg_amm;
+    const double dist_scale = focal_length * (player->height+player->height_disp) / cos_deg_amm;
 
     const double px = player->pos[X], py = player->pos[Y];
 
@@ -189,8 +179,8 @@ void renderStrip(App* app, RayData* data, Player* player, Map* map, int posX, fl
 
     const float dist = data->dist * cos(deg_amm);
 
-    const int startY = horizon - focal_length * (map->wall_height-player->height) / dist;
-    const int endY   = horizon + focal_length * (player->height) / dist;
+    const int startY = horizon - focal_length * (map->wall_height-player->height-player->height_disp) / dist;
+    const int endY   = horizon + focal_length * (player->height+player->height_disp) / dist;
     const int c_startY = (startY<0)?0:startY;
     const int c_endY   = (endY>SCREEN_HEIGHT)?SCREEN_HEIGHT:endY;
     

@@ -5,21 +5,20 @@ void App_init(App* app) {
     int renderer_flags, window_flags;
 
     renderer_flags = SDL_RENDERER_ACCELERATED;
-    window_flags = 0;
+    window_flags = SDL_WINDOW_RESIZABLE;
 
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         printf("Couldn't initialize SDL2: %s\n", SDL_GetError());
         exit(1);
     }
 
-    app->window = SDL_CreateWindow(SCREEN_NAME, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH * SCREEN_RESOLUTION_SCALE, SCREEN_HEIGHT * SCREEN_RESOLUTION_SCALE, window_flags);
+    app->window = SDL_CreateWindow(SCREEN_NAME, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH*SCREEN_RESOLUTION_SCALE, SCREEN_HEIGHT*SCREEN_RESOLUTION_SCALE, window_flags);
 
     if (!app->window) {
         printf("Failed to open %d x %d window: %s\n", SCREEN_WIDTH, SCREEN_HEIGHT, SDL_GetError());
         exit(1);
     }
 
-    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
 
     app->renderer = SDL_CreateRenderer(app->window, -1, renderer_flags);
 
@@ -31,10 +30,11 @@ void App_init(App* app) {
 
     app->screen_texture = SDL_CreateTexture(app->renderer, 
                                             SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STREAMING, 
-                                            SCREEN_WIDTH * SCREEN_RESOLUTION_SCALE, 
-                                            SCREEN_HEIGHT * SCREEN_RESOLUTION_SCALE);
+                                            SCREEN_WIDTH, 
+                                            SCREEN_HEIGHT);
 
     SDL_SetRelativeMouseMode(SDL_TRUE);
+    SDL_RenderSetLogicalSize(app->renderer, SCREEN_WIDTH, SCREEN_HEIGHT);
 }
 
 void App_clearBuffer(App* app) {
@@ -42,15 +42,18 @@ void App_clearBuffer(App* app) {
 }
 
 void App_free(App* app) {
+    SDL_DestroyTexture(app->screen_texture);
     SDL_DestroyRenderer(app->renderer);
     SDL_DestroyWindow(app->window);
     free(app->screen_pixels);
 }
 
 void App_setPixel(App* app, int x, int y, uint32_t color) {
-    if (x < 0 || x > SCREEN_WIDTH || y < 0 || y > SCREEN_HEIGHT) return;
+    if (x < 0 || x >= SCREEN_WIDTH || y < 0 || y >= SCREEN_HEIGHT) return;
 
     if ((color>>24 & 0xFF) != 0xFF) return;
 
-    app->screen_pixels[y*SCREEN_WIDTH+x] = color;
+    size_t idx = (size_t)y * SCREEN_WIDTH + (size_t)x;
+    
+    app->screen_pixels[idx] = color;
 }

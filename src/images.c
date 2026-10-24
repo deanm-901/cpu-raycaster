@@ -47,17 +47,20 @@ void setImageHolderIndex(unsigned char png_data[], size_t png_size, const char* 
 
     if (!png_image_finish_read(&data->image, NULL, rgba, 0, NULL)) {
         fprintf(stderr, "PNG decode error: %s\n", data->image.message);
+        png_image_free(&data->image);
         free(rgba);
         free(pixels);
-        png_image_free(&data->image);
+        free(data);
         exit(1);
     }
+    
+    png_image_free(&data->image);
 
     for (size_t i=0; i<count; ++i) {
-        uint8_t r = rgba[4*i+0];
-        uint8_t g = rgba[4*i+1];
-        uint8_t b = rgba[4*i+2];
-        uint8_t a = rgba[4*i+3];
+        uint32_t r = rgba[4*i+0];
+        uint32_t g = rgba[4*i+1];
+        uint32_t b = rgba[4*i+2];
+        uint32_t a = rgba[4*i+3];
 
         pixels[i] = (a<<24)|(r<<16)|(g<<8)|b;
     }
@@ -84,6 +87,25 @@ ImageHolder initImageHolder() {
     return holder;
 }
 
+static void freeImageItem(HashMapItem* item) {
+    if (item->key == NULL || item->value.value == NULL) return;
+
+    ImageData* data = item->value.value;
+
+    free(data->pixels);
+    free(data);
+}
+
 void freeImageHolder() {
+    HashMap *map = image_holder.image_map;
+    if (map == NULL) return;
+
+    for (size_t i = 0; i<HASHMAP_ITEMARR_SIZE; ++i) {
+        freeImageItem(&map->item_arr[i]);
+    }
+
+    for (size_t i = 0; i<HASHMAP_ITEMARR_SIZE; ++i) {
+        freeImageItem(&map->collision_arr[i]);
+    }
     HashMap_free(image_holder.image_map);
 }

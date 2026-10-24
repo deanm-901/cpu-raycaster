@@ -6,11 +6,11 @@ void DestroyRenderThread(RenderThread* rthread) {
     pthread_cond_signal(&rthread->ctx.cond_start);
     pthread_mutex_unlock(&rthread->ctx.mutex);
 
+    pthread_join(rthread->thread, NULL);
+
     pthread_mutex_destroy(&rthread->ctx.mutex);
     pthread_cond_destroy(&rthread->ctx.cond_end);
     pthread_cond_destroy(&rthread->ctx.cond_start);
-
-    pthread_join(rthread->thread, NULL);
 }
 
 void InitRenderThread(RenderThread* rthread, int startX, int endX, void *(*func)(void *)) {
@@ -19,6 +19,9 @@ void InitRenderThread(RenderThread* rthread, int startX, int endX, void *(*func)
     pthread_cond_init(&rthread->ctx.cond_start, NULL);
 
     pthread_create(&rthread->thread, NULL, func, &rthread->ctx);
+
+    rthread->ctx.startX = startX;
+    rthread->ctx.endX = endX;
 }
 
 void RenderThreadSubmitJob(RenderThread* rthread) {

@@ -28,7 +28,7 @@ HashMap* HashMap_init() {
     };
 
     m->collision_arr_size = HASHMAP_COLLARR_SIZE;
-    m->collision_arr = malloc(HASHMAP_COLLARR_SIZE * sizeof(*m->collision_arr));
+    m->collision_arr = malloc(HASHMAP_COLLARR_SIZE * sizeof(*m->collision_arr)); // !!
     if (m->collision_arr == NULL) {
         free(m);
         return NULL;
@@ -57,16 +57,23 @@ void HashMap_free(HashMap* m) {
 }
 
 static int HashMap_resize(HashMap* m) {
-    size_t old_collarr_size  = m->collision_arr_size;
-    HashMapItem* old_collarr = m->collision_arr;
+    if (m == NULL || HASHMAP_RESIZE_FACTOR < 2) return 1;
 
-    m->collision_arr_size *= HASHMAP_RESIZE_FACTOR;
-    m->collision_arr = calloc(m->collision_arr_size, sizeof(HashMapItem));
+    size_t old_size = m->collision_arr_size;
 
-    if (m->collision_arr == NULL) {
-        m->collision_arr = old_collarr;
-        m->collision_arr_size = old_collarr_size;
-        return 1;
+    if (old_size > SIZE_MAX / HASHMAP_RESIZE_FACTOR) return 1;
+    size_t new_size = old_size * HASHMAP_RESIZE_FACTOR;
+
+    if (new_size > SIZE_MAX / sizeof *m->collision_arr) return 1;
+
+    HashMapItem* new_arr = realloc(m->collision_arr, new_size * sizeof *new_arr);
+    if (new_arr == NULL) return 1;
+
+    m->collision_arr = new_arr;
+    m->collision_arr_size = new_size;
+
+    for (size_t i = old_size; i < new_size; ++i) {
+        HashMap_initItem(&m->collision_arr[i]);
     }
 
     return 0;

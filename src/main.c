@@ -23,7 +23,7 @@ ImageHolder image_holder;
 FaceAttr face_types[MAX_FACETYPE_COUNT];
 
 App app;
-Player player = {.pos={1.5,1.5}, .vel={0,0}, .a=PI/2, .vela=0.0, .speed=1.5, .turn_speed=2, .height=0.5, .size=0.1};
+Player player = {.pos={1.5,1.5}, .vel={0,0}, .a=PI/2, .vela=0.0, .speed=1.5, .turn_speed=2, .height=0.55, .size=0.1};
 
 Map map = {.wall_height = 1.0};
 
@@ -129,7 +129,7 @@ static void handleInput() {
                     exit(0);
                     break;
                 case SDL_KEYDOWN:
-                    if (input.key.keysym.scancode == SDL_SCANCODE_ESCAPE) exit(0);
+                    if (input.key.keysym.scancode == SDL_SCANCODE_ESCAPE) SDL_SetRelativeMouseMode(!SDL_GetRelativeMouseMode());
 
                     Player_handleKeyboardInput(&player, &input.key, 1);
                     break;
@@ -137,7 +137,7 @@ static void handleInput() {
                     Player_handleKeyboardInput(&player, &input.key, -1);
                     break;
                 case SDL_MOUSEMOTION:
-                    Player_handleMouseMotion(&player, &input.motion);
+                    Player_handleMouseMotion(&player, &input.motion, &app);
                     break;
                 default:
                     break;
@@ -227,11 +227,28 @@ static void destroyThreads() {
         DestroyRenderThread(&render_threads[i]);
 }
 
+
+static void limitFPS() {
+    const int display_num = SDL_GetWindowDisplayIndex(app.window);
+    SDL_DisplayMode display;
+    SDL_GetDisplayMode(display_num, 0, &display);
+    const int hz = display.refresh_rate;
+    
+    const int ticks_per_frame = 1000/hz;
+    const int frame_ticks = SDL_GetTicks() - TIME_NOW;
+
+    const int diff = ticks_per_frame - frame_ticks;
+
+    if (diff > 0) {
+        SDL_Delay(diff);
+    }
+}
+
 static void cleanup() {
-    App_free(&app);
-    SDL_Quit();
     freeImageHolder();
     destroyThreads();
+    App_free(&app);
+    SDL_Quit();
 }
 
 int main(int argc, char* argv[]) {
@@ -285,6 +302,9 @@ int main(int argc, char* argv[]) {
         // player velocity //
         Player_handleVelocity(&player, dt);
 
+        // player anim //
+        Player_walkAnimation(&player, dt);
+
         // render frame //
         App_clearBuffer(&app);
 
@@ -305,7 +325,7 @@ int main(int argc, char* argv[]) {
 
         presentFrame(&app);
 
-        // delays every frame by ms; helps free CPU time
-        SDL_Delay(2);
+        // delays every frame if over hz; helps free CPU time
+        limitFPS();
     }
 }

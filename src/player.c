@@ -7,11 +7,15 @@
 
 extern double dt;
 
-void Player_handleMouseMotion(Player* player, SDL_MouseMotionEvent* input) {
+void Player_handleMouseMotion(Player* player, SDL_MouseMotionEvent* input, App* app) {
     //if ((float)input->xrel * MOUSE_SENS == 0) return;
+    if (!SDL_GetRelativeMouseMode()) return;
 
-    player->inpa  = (float)input->xrel * MOUSE_SENS;
-    if (ENABLE_PITCH) player->inpap = -(float)input->yrel * MOUSE_SENS * 0.75;
+    int w,h;
+    SDL_GetWindowSize(app->window, &w, &h);
+
+    player->inpa  = (float)input->xrel * MOUSE_SENS * ((float)w/SCREEN_WIDTH) * dt;
+    if (ENABLE_PITCH) player->inpap = -(float)input->yrel * MOUSE_SENS * ((float)h/SCREEN_HEIGHT) * 0.75 * dt;
 }
 void Player_handleKeyboardInput(Player* player, SDL_KeyboardEvent* input, int down) {
     if (input->repeat != 0) return;
@@ -210,4 +214,16 @@ RayData Player_castRay(Player* player, Map* map, double angle) {
                     .u = u};
 
     return data;
+}
+
+double walk_anim_amm = 0;
+void Player_walkAnimation(Player* player, double dt) {
+    if (player->vel[X] == 0 && player->vel[Y] == 0 && walk_anim_amm != 0) {
+        walk_anim_amm = 0;
+        return;
+    }
+
+    player->height_disp = 0.01*sin(walk_anim_amm*10);
+
+    walk_anim_amm += dt;
 }

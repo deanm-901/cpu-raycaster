@@ -4,7 +4,7 @@
 #include <SDL2/SDL.h>
 #include "app.h"
 #include "player.h"
-#include "images.h"
+#include "image-holder.h"
 #include "threads.h"
 
 typedef struct {

@@ -12,10 +12,11 @@
 #include "app.h"
 #include "render.h"
 #include "player.h"
-#include "images.h"
+#include "image-holder.h"
 #include "map.h"
 #include "hashmap.h"
 #include "threads.h"
+#include "assets.h"
 
 // there is one image holder per instance of the executable file
 ImageHolder image_holder;
@@ -47,7 +48,7 @@ RenderThread render_threads[REND_THREAD_AMM];
 static void renderBackground() {
     double focal_length = SCREEN_WIDTH / (2.0 * tan(FOV / 2.0));
 
-    ImageData* sky = getImageData("sky");
+    ImageData* sky = getImageData("sky.png");
 
     int y_pos = (player.ap/(2*PI))*SCREEN_HEIGHT;
     int fill = SCREEN_HEIGHT/4;
@@ -129,7 +130,20 @@ static void handleInput() {
                     exit(0);
                     break;
                 case SDL_KEYDOWN:
-                    if (input.key.keysym.scancode == SDL_SCANCODE_ESCAPE) SDL_SetRelativeMouseMode(!SDL_GetRelativeMouseMode());
+                    if (input.key.keysym.scancode == SDL_SCANCODE_ESCAPE) {
+                        int w,h;
+                        SDL_GetWindowSize(app.window, &w, &h);
+                        SDL_WarpMouseInWindow(app.window, w/2, h/2);
+                    
+                        SDL_SetRelativeMouseMode(!SDL_GetRelativeMouseMode());
+                    }
+
+                    if (input.key.keysym.scancode == SDL_SCANCODE_F11) {
+                        SDL_SetWindowFullscreen(app.window, 
+                            (SDL_GetWindowFlags(app.window)&SDL_WINDOW_FULLSCREEN_DESKTOP)?
+                                0:SDL_WINDOW_FULLSCREEN_DESKTOP
+                        );
+                    }
 
                     Player_handleKeyboardInput(&player, &input.key, 1);
                     break;
@@ -185,9 +199,7 @@ static void initFaceTypes() {
 }
 
 static void initImages() {
-    setImageHolderIndex(png_font1, png_font1_size, "font1");
-    setImageHolderIndex(png_atlas, png_atlas_size, "atlas");
-    setImageHolderIndex(png_sky, png_sky_size, "sky");
+    InitAssetData();
 }
 
 static void initMapDefaults() {
@@ -212,7 +224,7 @@ static void renderDebugText() {
 
     snprintf(debug_text, sizeof(debug_text), "FPS: %0.2f\nPOS: (%0.2f,%0.2f)", fps_avg, player.pos[X], player.pos[Y]);
 
-    renderText(&app, getImageData("font1"), 8, 8, debug_text, MAP_MAX_X*MAP_REP_SCALE, 0, 1, C_WHITE);
+    renderText(&app, getImageData("font1.png"), 8, 8, debug_text, MAP_MAX_X*MAP_REP_SCALE, 0, 1, C_WHITE);
 }
 
 static void initThreads() {
@@ -286,7 +298,7 @@ int main(int argc, char* argv[]) {
 
     atexit(cleanup);
 
-    while(1) {
+    for(;;) {
         TIME_LAST = TIME_NOW;
         TIME_NOW = SDL_GetTicks();
         dt = (TIME_NOW-TIME_LAST)/1000.0;
@@ -321,7 +333,6 @@ int main(int argc, char* argv[]) {
 
             renderDebugText();
         }
-
 
         presentFrame(&app);
 

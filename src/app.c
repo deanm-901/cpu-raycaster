@@ -19,6 +19,7 @@ void App_init(App* app) {
         exit(1);
     }
 
+    SDL_SetHint(SDL_HINT_MOUSE_RELATIVE_SCALING, "0");
 
     app->renderer = SDL_CreateRenderer(app->window, -1, renderer_flags);
 

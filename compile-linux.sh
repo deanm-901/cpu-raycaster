@@ -12,6 +12,10 @@ compile_debug() {
     #    ASAN_OPTIONS=fast_unwind_on_malloc=0:malloc_context_size=40:detect_leaks=1
 }
 
+./bash/build-assets-c.sh > src/assets.c
+
+#mv src/assets.c.tmp src/assets.c
+
 if [ "$#" -ne 1 ]; then
     compile_norm
     exit 0

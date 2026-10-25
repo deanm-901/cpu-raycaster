@@ -1,19 +1,10 @@
-#ifndef IMAGES_H
-#define IMAGES_H
+#ifndef IMAGE_HOLDER_H
+#define IMAGE_HOLDER_H
 
 #include <stdint.h>
 #include <png.h>
 #include "defs.h"
 #include "hashmap.h"
-
-extern unsigned char png_sky[];
-extern size_t png_sky_size;
-
-extern unsigned char png_atlas[];
-extern size_t png_atlas_size;
-
-extern unsigned char png_font1[];
-extern size_t png_font1_size;
 
 typedef struct {
     png_image image;

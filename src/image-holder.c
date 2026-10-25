@@ -1,22 +1,7 @@
-#include "images.h"
+#include "image-holder.h"
 #include <stdlib.h>
 #include <png.h>
 #include "hashmap.h"
-
-unsigned char png_sky[]  = {
-    #embed "../images/sky.png"
-};
-size_t png_sky_size = sizeof png_sky;
-
-unsigned char png_atlas[]  = {
-    #embed "../images/atlas.png"
-};
-size_t png_atlas_size = sizeof png_atlas;
-
-unsigned char png_font1[]  = {
-    #embed "../images/font1.png"
-};
-size_t png_font1_size = sizeof png_font1;
 
 extern ImageHolder image_holder;
 

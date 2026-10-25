@@ -75,7 +75,7 @@ static void renderStripCeiling(App* app, Player* player, Map* map, double horizo
 
     if (player->height > map->wall_height) return;
 
-    const ImageData* img = getImageData("atlas");
+    const ImageData* img = getImageData("atlas.png");
     const float ray_ang = player->a+deg_amm;
     const float ray_cos = cos(ray_ang);
     const float ray_sin = sin(ray_ang);
@@ -123,7 +123,7 @@ static void renderStripFloor(App* app, Player* player, Map* map, double horizon,
 
     if (start<0) start = 0;
 
-    const ImageData* img = getImageData("atlas");
+    const ImageData* img = getImageData("atlas.png");
     const float ray_ang = player->a+deg_amm;
     const float ray_cos = cos(ray_ang);
     const float ray_sin = sin(ray_ang);
@@ -208,7 +208,7 @@ void renderStrip(App* app, RayData* data, Player* player, Map* map, int posX, fl
     float mult = (float)map->mapT[coordToIndex(data->hit_tile[X], data->hit_tile[Y], MAP_MAX_X)].light_lvl/255.0;
     mult *= getFogSubtraction(dist)*FOG_SUB_AMM+1;
 
-    ImageData* img = getImageData("atlas");
+    ImageData* img = getImageData("atlas.png");
 
     int atlasX = attr->atlas_pos[X] * TEXTURE_ATLAS_W;
     int atlasY = attr->atlas_pos[Y] * TEXTURE_ATLAS_H;

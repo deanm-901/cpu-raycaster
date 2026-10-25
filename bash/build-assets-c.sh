@@ -1,7 +1,3 @@
-#!/usr/bin/env bash
-set -euo pipefail
-shopt -s nullglob
-
 files=(images/*.png)
 symbols=()
 names=()

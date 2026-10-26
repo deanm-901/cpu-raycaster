@@ -6,6 +6,7 @@
 #include <pthread.h>
 
 extern FaceAttr face_types[MAX_FACETYPE_COUNT];
+extern RayData ray_data[SCREEN_WIDTH];
 
 void presentFrame(App* app) {
     SDL_UpdateTexture(app->screen_texture, NULL, app->screen_pixels, SCREEN_WIDTH * sizeof(uint32_t));
@@ -34,7 +35,7 @@ void renderRect(App* app, Rect rect) {
             if (px < 0 || px >  SCREEN_WIDTH) continue;
             if (py < 0 || py > SCREEN_HEIGHT) continue;
 
-            App_setPixel(app, rect.x+x,rect.y+y, rect.color);
+            App_setPixel(app, rect.x+x,rect.y+y, rect.color, 9999);
         }
     }
 }
@@ -55,7 +56,7 @@ void renderLine(App* app, int p1[2], int p2[2], uint32_t color) {
     int i = 0;
 
     while (i <= step) {
-        App_setPixel(app, round(pos[X]), round(pos[Y]), color);
+        App_setPixel(app, round(pos[X]), round(pos[Y]), color, 9999);
         pos[X] += diff[X];
         pos[Y] += diff[Y];
         i++;
@@ -114,7 +115,7 @@ static void renderStripCeiling(App* app, Player* player, Map* map, double horizo
         uint32_t pixel = img->pixels[coordToIndex(texX+atlasX, texY+atlasY, img->image.width)];
         pixel = ColorMult(pixel, mult, mult, mult, 1.0);
 
-        App_setPixel(app, posX, y, pixel);
+        App_setPixel(app, posX, y, pixel, 1.0/dz);
     }
 }
 
@@ -163,7 +164,7 @@ static void renderStripFloor(App* app, Player* player, Map* map, double horizon,
         uint32_t pixel = img->pixels[coordToIndex(texX+atlasX, texY+atlasY, img->image.width)];
         pixel = ColorMult(pixel, mult, mult, mult, 1.0);
 
-        App_setPixel(app, posX, y, pixel);
+        App_setPixel(app, posX, y, pixel, 1.0/dz);
     }
 }
 
@@ -227,11 +228,11 @@ void renderStrip(App* app, RayData* data, Player* player, Map* map, int posX, fl
         uint32_t pixel = img->pixels[coordToIndex(u*TEXTURE_ATLAS_W + atlasX, v*TEXTURE_ATLAS_H + atlasY, img->image.width)];
         pixel = ColorMult(pixel, mult, mult, mult, 1.0);
 
-        App_setPixel(app, posX, i+c_startY, pixel);
+        App_setPixel(app, posX, i+c_startY, pixel, 1.0/dist);
     }
 }
 
-void renderImage(App* app, ImageData* data, Rect rect) {
+void renderImage(App* app, ImageData* data, Rect rect, float zbuffer) {
     float scale[2] = {(float)rect.w/data->image.width, (float)rect.h/data->image.height};
 
     for (int y = 0; y < data->image.height*scale[Y]; y++) {
@@ -240,7 +241,7 @@ void renderImage(App* app, ImageData* data, Rect rect) {
             int index = ((int)(y/scale[Y])*data->image.width)+(x/scale[X]);
             uint32_t pixel = data->pixels[index];
 
-            App_setPixel(app, x+rect.x, y+rect.y, pixel);
+            App_setPixel(app, x+rect.x, y+rect.y, pixel, zbuffer);
         }
     }
 }
@@ -277,11 +278,70 @@ void renderText(App* app, ImageData* font, uint8_t tile_w, uint8_t tile_h, const
 
                     pixel = ColorMult(pixel, color);
 
-                    App_setPixel(app, pix_pos_x, pix_pos_y, pixel);
+                    App_setPixel(app, pix_pos_x, pix_pos_y, pixel, 9999);
                 }
             }
         }
         char_pos_x++;
+    }
+}
+
+void renderSprite(SpriteAttr* sprite, App* app, Player* player) {
+    const float dx = sprite->pos[X]-player->pos[X], dy = sprite->pos[Y]-player->pos[Y];
+    const float pa = atan2f(dy, dx);
+    
+    const float pdist = hypotf(dx,dy);
+
+    const float sizea = atan2f(sprite->size/2, pdist);
+    const float rel = remainderf(pa-player->a, 2*PI);
+    float amin  = rel-sizea, amax = rel+sizea;
+
+    const float aperpix = FOV/SCREEN_WIDTH;
+
+    const float pixsize = sizea*2/aperpix;
+
+    const int pixstrt = (amin+FOV/2)/aperpix;
+    const int pix_end = (amax+FOV/2)/aperpix;
+
+    if (pix_end < 0 || pixstrt > SCREEN_WIDTH) return;
+
+    const int c_pixstrt = (pixstrt<0)? 0:pixstrt;
+    const int c_pix_end = (pix_end>SCREEN_WIDTH)? SCREEN_WIDTH:pix_end;
+
+    const int pixstrt_diff = c_pixstrt-pixstrt;
+    const int pix_end_diff = c_pix_end-pix_end;
+
+    const double focal_length = SCREEN_WIDTH / (2.0 * tan(FOV / 2.0));
+    const double horizon = SCREEN_HEIGHT/2 + focal_length*tan(player->ap);
+
+    const ImageData* img = getImageData(sprite->img_key);
+
+    const float depth = pdist * cos(pa-player->a); 
+
+    for (int x=c_pixstrt;x<c_pix_end;x++) {
+        if (ray_data[x].dist < depth) continue;
+
+        const int tx=x+pixstrt_diff;
+
+        float u = (float)(tx-c_pixstrt)/pixsize;
+
+        const int startY = horizon - focal_length * (sprite->size-player->height-player->height_disp) / depth;
+        const int endY   = horizon + focal_length * (player->height+player->height_disp) / depth;
+        const int c_startY = (startY<0)?0:startY;
+        const int c_endY   = (endY>SCREEN_HEIGHT)?SCREEN_HEIGHT:endY;
+
+        if (endY < 0 || startY > SCREEN_HEIGHT) continue;
+        
+        const int lineH  = endY-startY;
+        const int c_lineH = c_endY-c_startY;
+
+        for (int i=0;i<c_lineH;i++) {
+            float v = (float)(i+c_startY-startY)/lineH;
+
+            uint32_t pixel = img->pixels[coordToIndex(u*img->image.width, v*img->image.height, img->image.width)];
+
+            App_setPixel(app, x, i+c_startY, pixel, 1.0/depth);
+        }
     }
 }
 

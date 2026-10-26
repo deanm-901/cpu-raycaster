@@ -1,4 +1,4 @@
-// TODO 0: Add Sprites
+// TODO 0: Sprite angles
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -26,7 +26,7 @@ FaceAttr face_types[MAX_FACETYPE_COUNT];
 App app;
 Player player = {.pos={1.5,1.5}, .vel={0,0}, .a=PI/2, .vela=0.0, .speed=1.5, .turn_speed=2, .height=0.55, .size=0.1};
 
-Map map = {.wall_height = 1.0};
+Map map = {.wall_height = 1.0, .sky_texture="sky.png"};
 
 // in ms
 Uint64 TIME_NOW = 0;
@@ -48,7 +48,7 @@ RenderThread render_threads[REND_THREAD_AMM];
 static void renderBackground() {
     double focal_length = SCREEN_WIDTH / (2.0 * tan(FOV / 2.0));
 
-    ImageData* sky = getImageData("sky.png");
+    ImageData* sky = getImageData(map.sky_texture);
 
     int y_pos = (player.ap/(2*PI))*SCREEN_HEIGHT;
     int fill = SCREEN_HEIGHT/4;
@@ -56,8 +56,8 @@ static void renderBackground() {
     Rect rect1 = {.x=(-player.a/(2*PI))*SCREEN_WIDTH,                .y=y_pos-fill/2, .w=SCREEN_WIDTH, .h=SCREEN_HEIGHT+fill};
     Rect rect2 = {.x=(-player.a/(2*PI))*SCREEN_WIDTH + SCREEN_WIDTH, .y=y_pos-fill/2, .w=SCREEN_WIDTH, .h=SCREEN_HEIGHT+fill};
 
-    renderImage(&app, sky, rect1);
-    renderImage(&app, sky, rect2);
+    renderImage(&app, sky, rect1, 0.0);
+    renderImage(&app, sky, rect2, 0.0);
 }
 
 static void renderRepFloor() {
@@ -192,10 +192,12 @@ static void initFaceTypes() {
     face_types[T_PIZZA] = pizza;
     FaceAttr grass = {.isCollidable=1,.atlas_pos={0,0}};
     face_types[T_GRASS] = grass;
-    FaceAttr bricks = {.isCollidable=1,.atlas_pos={0,1}};
-    face_types[T_BRICK] = bricks;
+    FaceAttr brick = {.isCollidable=1,.atlas_pos={0,1}};
+    face_types[T_BRICK] = brick;
     FaceAttr tiles = {.isCollidable=1,.atlas_pos={1,1}};
     face_types[T_TILES] = tiles;
+    FaceAttr bckrm = {.isCollidable=1,.atlas_pos={2,1}};
+    face_types[T_BCKRM] = bckrm;
 }
 
 static void initImages() {
@@ -222,7 +224,7 @@ static void renderDebugText() {
         fps_bucket_count = 0;
     }
 
-    snprintf(debug_text, sizeof(debug_text), "FPS: %0.2f\nPOS: (%0.2f,%0.2f)", fps_avg, player.pos[X], player.pos[Y]);
+    snprintf(debug_text, sizeof(debug_text), "FPS: %0.2f\nPOS: (%0.2f,%0.2f)\nANG: (%0.2f,%0.2f)", fps_avg, player.pos[X], player.pos[Y], player.a, player.ap);
 
     renderText(&app, getImageData("font1.png"), 8, 8, debug_text, MAP_MAX_X*MAP_REP_SCALE, 0, 1, C_WHITE);
 }
@@ -239,6 +241,38 @@ static void destroyThreads() {
         DestroyRenderThread(&render_threads[i]);
 }
 
+static void renderRepSprites() {
+    for (int i=0;i<map.sprites_amm;i++) {
+        SpriteAttr* sprite = &map.sprites[i];
+
+        Rect sprite_rect = {.x=(sprite->pos[X]*MAP_REP_SCALE)-(MAP_REP_PLAYER_SIZE/2), .y=(sprite->pos[Y]*MAP_REP_SCALE)-(MAP_REP_PLAYER_SIZE/2),
+                        .w=MAP_REP_PLAYER_SIZE, .h=MAP_REP_PLAYER_SIZE,
+                        .color=C_CYAN};
+
+        renderRect(&app, sprite_rect);
+    }
+}
+
+static void renderSprites() {
+
+    for (int i=0;i<map.sprites_amm;i++) {
+        SpriteAttr* sprite = &map.sprites[i];
+
+        renderSprite(sprite, &app, &player);
+    }
+}
+
+static void initSprites() {
+    for(int i=0;i<1;i++) {
+        SpriteAttr sprite1 = {
+            .img_key = "starman.png",
+            .pos = {1.5+i,2.5},
+            .size = 0.8
+        };
+        
+        Map_addSprite(&map, sprite1);
+    }
+}
 
 static void limitFPS() {
     const int display_num = SDL_GetWindowDisplayIndex(app.window);
@@ -295,6 +329,7 @@ int main(int argc, char* argv[]) {
     initImages();
     initThreads();
     initFaceTypes();
+    initSprites();
 
     atexit(cleanup);
 
@@ -324,12 +359,16 @@ int main(int argc, char* argv[]) {
 
         raycast();
 
+        renderSprites();
+
         if (debug) {
             renderRepFloor();
 
             renderRepWalls();
 
             renderRepPlayer();
+
+            renderRepSprites();
 
             renderDebugText();
         }

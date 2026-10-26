@@ -8,12 +8,13 @@ typedef struct {
     SDL_Renderer *renderer;
     SDL_Window *window;
     uint32_t* screen_pixels;
+    float* screen_zbuffer;
     SDL_Texture* screen_texture;
 } App;
 
 void App_init(App* app);
 void App_clearBuffer(App* app);
 void App_free(App* app);
-void App_setPixel(App* app, int x, int y, uint32_t color);
+void App_setPixel(App* app, int x, int y, uint32_t color, float zbuffer);
 
 #endif

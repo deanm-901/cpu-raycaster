@@ -30,14 +30,20 @@ typedef struct _SpriteImageList {
     size_t img_amm;
 } SpriteImageList;
 
+typedef struct _SpriteAnim {
+    SpriteImageList img_list;
+    size_t current_frame;
+    uint8_t b_running;
+    int anim_fps;
+    float dt;
+} SpriteAnim;
+
 typedef struct _SpriteAttr {
     float pos[2];
 
     SpriteImageList rotation_imgs;
 
-    SpriteImageList special_anim;
-    size_t anim_frame_num;
-    uint8_t b_start_anim;
+    SpriteAnim special_anim;
 
     float size;
     float a;

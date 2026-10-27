@@ -9,6 +9,7 @@ extern FaceAttr face_types[MAX_FACETYPE_COUNT];
 extern RayData ray_data[SCREEN_WIDTH];
 
 extern Uint64 TIME_NOW;
+extern double dt;
 
 void presentFrame(App* app) {
     SDL_UpdateTexture(app->screen_texture, NULL, app->screen_pixels, SCREEN_WIDTH * sizeof(uint32_t));
@@ -288,6 +289,24 @@ void renderText(App* app, ImageData* font, uint8_t tile_w, uint8_t tile_h, const
     }
 }
 
+static void findAnimSpriteImg(SpriteAttr* sprite, ImageData** img) {
+    if (sprite->special_anim.dt > 1.0/(float)sprite->special_anim.anim_fps) {
+        sprite->special_anim.current_frame++;
+        sprite->special_anim.dt = 0.0;
+    }
+    
+    if (sprite->special_anim.current_frame >= sprite->special_anim.img_list.img_amm) {
+        sprite->special_anim.dt = 0.0;
+        sprite->special_anim.current_frame = 0;
+        sprite->special_anim.b_running = false;
+        return;
+    }
+
+    sprite->special_anim.dt += dt;
+
+    *img = getImageData(sprite->special_anim.img_list.img_keys[sprite->special_anim.current_frame]);
+}
+
 void renderSprite(SpriteAttr* sprite, App* app, Player* player) {
     const float dx = sprite->pos[X]-player->pos[X], dy = sprite->pos[Y]-player->pos[Y];
     const float pa = atan2f(dy, dx);
@@ -328,6 +347,10 @@ void renderSprite(SpriteAttr* sprite, App* app, Player* player) {
         img = getImageData(sprite->rotation_imgs.img_keys[(TIME_NOW*sprite->spin_spd/1000) % sprite->rotation_imgs.img_amm]);
     if (sprite->b_frontfacing) 
         img = getImageData(sprite->rotation_imgs.img_keys[0]);
+
+    if (sprite->special_anim.b_running) {
+        findAnimSpriteImg(sprite, &img);
+    }
 
     const float depth = pdist * cos(pa-player->a); 
 

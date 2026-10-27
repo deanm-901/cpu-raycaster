@@ -163,6 +163,10 @@ static void handleInput() {
                         );
                     }
 
+                    if (input.key.keysym.scancode == SDL_SCANCODE_SPACE) {
+                        map.sprites[0].special_anim.b_running = true;
+                    }
+
                     Player_handleKeyboardInput(&player, &input.key, 1);
                     break;
                 case SDL_KEYUP:
@@ -287,6 +291,27 @@ static void renderSprites() {
 
 static void initSprites() {
     for(int i=0;i<1;i++) {
+        SpriteImageList anim_img = {
+            .img_keys = {
+                "starman0.png",
+                "starman0.png",
+                "starman11.png",
+                "starman1.png",
+                "starman11.png",
+                "starman1.png",
+                "starman11.png",
+                "starman1.png",
+                "starman0.png",
+                "starman0.png",
+            },
+            .img_amm = 10
+        };
+
+        SpriteAnim anim = {
+            .img_list=anim_img,
+            .anim_fps=12,
+        };
+        
         SpriteImageList rot = {
             .img_keys = {
                 "starman%n.png"
@@ -299,7 +324,8 @@ static void initSprites() {
             .pos = {1.5+i,2.5},
             .size = 0.8,
             .b_spin = false,
-            .b_frontfacing = true,
+            .b_frontfacing = false,
+            .special_anim = anim,
             .spin_spd = 12,
             .a = 0,
         };

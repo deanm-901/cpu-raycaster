@@ -2,11 +2,9 @@
 #include <string.h>
 #include <stdio.h>
 
-size_t Map_addSprite(Map* map, SpriteAttr sprite) {
-    size_t idx = map->sprites_amm;
-
+static void checkMark(SpriteImageList* img_list) {
     char pattern[MAX_SPRITE_IMG_KEY_CHAR];
-    memcpy(pattern, sprite.img_keys[0], sizeof pattern);
+    memcpy(pattern, img_list->img_keys[0], sizeof pattern);
     pattern[sizeof pattern - 1] = '\0';
 
     char *mark = strstr(pattern, "%n");
@@ -15,10 +13,19 @@ size_t Map_addSprite(Map* map, SpriteAttr sprite) {
         size_t prefix_len = (int)(mark-pattern);
         const char *suffix = mark+2;
 
-        for (int i=0;i<sprite.img_amm;i++) {
-            int len = snprintf(sprite.img_keys[i], sizeof sprite.img_keys[i], "%.*s%zu%s", (int)prefix_len, pattern, i, suffix);
+        for (int i=0;i<img_list->img_amm;i++) {
+            snprintf(img_list->img_keys[i], sizeof img_list->img_keys[i], "%.*s%zu%s", (int)prefix_len, pattern, i, suffix);
         }
     }
+}
+void SpriteImageList_init(SpriteImageList* list) {
+    checkMark(list);
+}
+
+size_t Map_addSprite(Map* map, SpriteAttr sprite) {
+    size_t idx = map->sprites_amm;
+
+    checkMark(&sprite.rotation_imgs);
 
     map->sprites[idx] = sprite;
 

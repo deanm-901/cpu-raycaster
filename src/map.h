@@ -21,15 +21,28 @@ typedef struct __attribute__((__packed__)) _MapTileAttr {
     MapFaceType flor_type;
 } MapTileAttr;
 
+
 #define MAX_SPRITE_IMAGES 12
 #define MAX_SPRITE_IMG_KEY_CHAR 24
-typedef struct _SpriteAttr {
-    float pos[2];
+
+typedef struct _SpriteImageList {
     char img_keys[MAX_SPRITE_IMAGES][MAX_SPRITE_IMG_KEY_CHAR];
     size_t img_amm;
+} SpriteImageList;
+
+typedef struct _SpriteAttr {
+    float pos[2];
+
+    SpriteImageList rotation_imgs;
+
+    SpriteImageList special_anim;
+    size_t anim_frame_num;
+    uint8_t b_start_anim;
+
     float size;
     float a;
     uint8_t b_spin;
+    uint8_t b_frontfacing;
     int spin_spd; // in frames per second
 } SpriteAttr;
 
@@ -51,5 +64,7 @@ typedef struct _FaceAttr {
 } FaceAttr;
 
 size_t Map_addSprite(Map* map, SpriteAttr sprite);
+
+void SpriteImageList_init(SpriteImageList* list);
 
 #endif

@@ -263,11 +263,16 @@ static void renderRepSprites() {
     for (int i=0;i<map.sprites_amm;i++) {
         SpriteAttr* sprite = &map.sprites[i];
 
+        int p1[2] = {sprite->pos[X]*MAP_REP_SCALE, sprite->pos[Y]*MAP_REP_SCALE};
+        int p2[2] = {sprite->pos[X]*MAP_REP_SCALE+cos(sprite->a)*MAP_REP_PLAYER_SIZE*2, 
+                      sprite->pos[Y]*MAP_REP_SCALE+sin(sprite->a)*MAP_REP_PLAYER_SIZE*2};
+        
         Rect sprite_rect = {.x=(sprite->pos[X]*MAP_REP_SCALE)-(MAP_REP_PLAYER_SIZE/2), .y=(sprite->pos[Y]*MAP_REP_SCALE)-(MAP_REP_PLAYER_SIZE/2),
                         .w=MAP_REP_PLAYER_SIZE, .h=MAP_REP_PLAYER_SIZE,
                         .color=C_CYAN};
 
         renderRect(&app, sprite_rect);
+        renderLine(&app, p1, p2, C_CYAN);
     }
 }
 
@@ -282,14 +287,19 @@ static void renderSprites() {
 
 static void initSprites() {
     for(int i=0;i<1;i++) {
-        SpriteAttr sprite1 = {
+        SpriteImageList rot = {
             .img_keys = {
-                "starman%n.png",
+                "starman%n.png"
             },
-            .img_amm = 12,
+            .img_amm = 12
+        };
+
+        SpriteAttr sprite1 = {
+            .rotation_imgs = rot,
             .pos = {1.5+i,2.5},
             .size = 0.8,
             .b_spin = false,
+            .b_frontfacing = true,
             .spin_spd = 12,
             .a = 0,
         };
@@ -393,9 +403,9 @@ int main(int argc, char* argv[]) {
 
             renderRepWalls();
 
-            renderRepPlayer();
-
             renderRepSprites();
+
+            renderRepPlayer();
 
             renderDebugText();
         }
@@ -403,6 +413,6 @@ int main(int argc, char* argv[]) {
         presentFrame(&app);
 
         // delays every frame if over hz; helps free CPU time
-        //limitFPS();
+        if (LIMIT_FRAMERATE) limitFPS();
     }
 }

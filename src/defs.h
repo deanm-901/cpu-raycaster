@@ -52,6 +52,7 @@
 #define MOUSE_SENS 0.00045
 #define LIMIT_PITCH 1
 #define ENABLE_PITCH 1
+#define LIMIT_FRAMERATE 1
 
 int coordToIndex(int x, int y, int width);
 void indexToCoord(int index, int width, int* x, int* y);

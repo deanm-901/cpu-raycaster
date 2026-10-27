@@ -318,16 +318,16 @@ void renderSprite(SpriteAttr* sprite, App* app, Player* player) {
 
     ImageData* img;
 
-    float img_ang = pa-sprite->a+PI+(PI/sprite->img_amm);
+    float img_ang = pa-sprite->a+PI+(PI/sprite->rotation_imgs.img_amm);
     if (img_ang > 2*PI) img_ang -= 2*PI;
     if (img_ang < 0)    img_ang += 2*PI;
-    const int frame = ((img_ang)/(2*PI))*sprite->img_amm;
+    const int frame = ((img_ang)/(2*PI))*sprite->rotation_imgs.img_amm;
 
-    if (sprite->b_spin) {
-        img = getImageData(sprite->img_keys[(TIME_NOW*sprite->spin_spd/1000) % sprite->img_amm]);
-    } else {
-        img = getImageData(sprite->img_keys[frame]);
-    }
+    img = getImageData(sprite->rotation_imgs.img_keys[frame]);
+    if (sprite->b_spin) 
+        img = getImageData(sprite->rotation_imgs.img_keys[(TIME_NOW*sprite->spin_spd/1000) % sprite->rotation_imgs.img_amm]);
+    if (sprite->b_frontfacing) 
+        img = getImageData(sprite->rotation_imgs.img_keys[0]);
 
     const float depth = pdist * cos(pa-player->a); 
 

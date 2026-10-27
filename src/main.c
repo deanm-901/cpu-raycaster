@@ -24,7 +24,7 @@ ImageHolder image_holder;
 FaceAttr face_types[MAX_FACETYPE_COUNT];
 
 App app;
-Player player = {.pos={1.5,1.5}, .vel={0,0}, .a=PI/2, .vela=0.0, .speed=1.5, .turn_speed=2, .height=0.55, .size=0.1};
+Player player = {.pos={1.5,1.5}, .vel={0,0}, .a=PI/2, .vela=0.0, .speed=2.0, .turn_speed=2, .height=0.55, .size=0.1};
 
 Map map = {.wall_height = 1.0, .sky_texture="sky.png"};
 
@@ -97,8 +97,22 @@ static void renderRepPlayer() {
     //angle line
     int p1[2] = {player.pos[X]*MAP_REP_SCALE, 
                  player.pos[Y]*MAP_REP_SCALE}, 
-        p2[2] = {player.pos[X]*MAP_REP_SCALE+cos(player.a)*MAP_REP_PLAYER_SIZE*2, 
-                 player.pos[Y]*MAP_REP_SCALE+sin(player.a)*MAP_REP_PLAYER_SIZE*2};
+        pa1[2] = {player.pos[X]*MAP_REP_SCALE+cos(player.a-(FOV/2))*MAP_REP_PLAYER_SIZE*3, 
+                 player.pos[Y]*MAP_REP_SCALE+sin(player.a-(FOV/2))*MAP_REP_PLAYER_SIZE*3},
+        pa2[2] = {player.pos[X]*MAP_REP_SCALE+cos(player.a+(FOV/2))*MAP_REP_PLAYER_SIZE*3, 
+                 player.pos[Y]*MAP_REP_SCALE+sin(player.a+(FOV/2))*MAP_REP_PLAYER_SIZE*3};
+    
+    //velocity line
+    int vp[2] = {
+        player.pos[X]*MAP_REP_SCALE+player.vel[X]*MAP_REP_PLAYER_SIZE*2,
+        player.pos[Y]*MAP_REP_SCALE+player.vel[Y]*MAP_REP_PLAYER_SIZE*2
+    };
+    
+    // want velocity line
+    int wvp[2] = {
+        player.pos[X]*MAP_REP_SCALE+player.wvel[X]*MAP_REP_PLAYER_SIZE*2, 
+        player.pos[Y]*MAP_REP_SCALE+player.wvel[Y]*MAP_REP_PLAYER_SIZE*2, 
+    };
 
     //raycasting line test
     //for (int i=0; i<sizeof(ray_data)/sizeof(RayData); i++) {
@@ -110,7 +124,11 @@ static void renderRepPlayer() {
     //    renderLine(&app, p1, r2, C_GREEN);
     //}
     
-    renderLine(&app, p1, p2, C_RED);
+    renderLine(&app, p1, wvp, C_BLUE);
+    renderLine(&app, p1, vp, C_YELLOW);
+    renderLine(&app, p1, pa1, C_RED);
+    renderLine(&app, p1, pa2, C_RED);
+    renderLine(&app, pa1, pa2, C_RED);
     //actual player rect
     Rect player_rect = {.x=(player.pos[X]*MAP_REP_SCALE)-(MAP_REP_PLAYER_SIZE/2), .y=(player.pos[Y]*MAP_REP_SCALE)-(MAP_REP_PLAYER_SIZE/2),
                         .w=MAP_REP_PLAYER_SIZE, .h=MAP_REP_PLAYER_SIZE,
@@ -265,9 +283,15 @@ static void renderSprites() {
 static void initSprites() {
     for(int i=0;i<1;i++) {
         SpriteAttr sprite1 = {
-            .img_key = "starman.png",
+            .img_keys = {
+                "starman%n.png",
+            },
+            .img_amm = 12,
             .pos = {1.5+i,2.5},
-            .size = 0.8
+            .size = 0.8,
+            .b_spin = false,
+            .spin_spd = 12,
+            .a = 0,
         };
         
         Map_addSprite(&map, sprite1);
@@ -343,11 +367,14 @@ int main(int argc, char* argv[]) {
         // velocity input conversion //
         Player_inputVelocity(&player);
 
-        // collision //
-        Player_handleCollision(&player, &map, dt, &app);
-
         // player velocity //
         Player_handleVelocity(&player, dt);
+
+        // player collision //
+        Player_handleCollision(&player, &map, dt, &app);
+
+        // player position //
+        Player_handlePosition(&player, dt);
 
         // player anim //
         Player_walkAnimation(&player, dt);
@@ -376,6 +403,6 @@ int main(int argc, char* argv[]) {
         presentFrame(&app);
 
         // delays every frame if over hz; helps free CPU time
-        limitFPS();
+        //limitFPS();
     }
 }

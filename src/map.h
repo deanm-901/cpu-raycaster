@@ -21,11 +21,16 @@ typedef struct __attribute__((__packed__)) _MapTileAttr {
     MapFaceType flor_type;
 } MapTileAttr;
 
+#define MAX_SPRITE_IMAGES 12
+#define MAX_SPRITE_IMG_KEY_CHAR 24
 typedef struct _SpriteAttr {
     float pos[2];
-    char* img_key;
+    char img_keys[MAX_SPRITE_IMAGES][MAX_SPRITE_IMG_KEY_CHAR];
+    size_t img_amm;
     float size;
     float a;
+    uint8_t b_spin;
+    int spin_spd; // in frames per second
 } SpriteAttr;
 
 #define MapTileAttr_INIT(X) MapTileAttr X = {.light_lvl = 255, .flor_type = T_GRASS}

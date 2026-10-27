@@ -7,6 +7,7 @@
 
 typedef struct {
     double pos[2],a,ap;
+    double wvel[2];
     double vel[2],vela,velap;
     double inp[2],inpa,inpap;
     double height, height_disp, size;
@@ -33,6 +34,7 @@ void Player_inputVelocity(Player* player);
 void Player_handleMouseMotion(Player* player, SDL_MouseMotionEvent* input, App* app);
 void Player_handleCollision(Player* player, Map* map, double dt, App* app);
 void Player_handleVelocity(Player* player, double dt);
+void Player_handlePosition(Player* player, double dt);
 void Player_walkAnimation(Player* player, double dt);
 
 RayData Player_castRay(Player* player, Map* map, double angle);

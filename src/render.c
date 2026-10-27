@@ -8,6 +8,8 @@
 extern FaceAttr face_types[MAX_FACETYPE_COUNT];
 extern RayData ray_data[SCREEN_WIDTH];
 
+extern Uint64 TIME_NOW;
+
 void presentFrame(App* app) {
     SDL_UpdateTexture(app->screen_texture, NULL, app->screen_pixels, SCREEN_WIDTH * sizeof(uint32_t));
     SDL_RenderClear(app->renderer);
@@ -314,7 +316,18 @@ void renderSprite(SpriteAttr* sprite, App* app, Player* player) {
     const double focal_length = SCREEN_WIDTH / (2.0 * tan(FOV / 2.0));
     const double horizon = SCREEN_HEIGHT/2 + focal_length*tan(player->ap);
 
-    const ImageData* img = getImageData(sprite->img_key);
+    ImageData* img;
+
+    float img_ang = pa-sprite->a+PI+(PI/sprite->img_amm);
+    if (img_ang > 2*PI) img_ang -= 2*PI;
+    if (img_ang < 0)    img_ang += 2*PI;
+    const int frame = ((img_ang)/(2*PI))*sprite->img_amm;
+
+    if (sprite->b_spin) {
+        img = getImageData(sprite->img_keys[(TIME_NOW*sprite->spin_spd/1000) % sprite->img_amm]);
+    } else {
+        img = getImageData(sprite->img_keys[frame]);
+    }
 
     const float depth = pdist * cos(pa-player->a); 
 

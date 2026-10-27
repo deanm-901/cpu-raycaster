@@ -6,8 +6,8 @@
 #define SCREEN_RESOLUTION_SCALE 1
 #define SCREEN_NAME "Raycaster"
 
-#define MAP_REP_SCALE 8
-#define MAP_REP_PLAYER_SIZE 2
+#define MAP_REP_SCALE 12
+#define MAP_REP_PLAYER_SIZE 3
 
 #define MAP_MAX_X 16
 #define MAP_MAX_Y 16
@@ -45,6 +45,8 @@
 #define FOG_MAX_DIST 20.0f
 #define FOG_SUB_AMM 0.4f
 
+#define PLAYER_FRICTION 10
+
 // settings
 #define DEBUG 1
 #define MOUSE_SENS 0.00045
@@ -53,5 +55,7 @@
 
 int coordToIndex(int x, int y, int width);
 void indexToCoord(int index, int width, int* x, int* y);
+
+float lerp(float v0, float v1, float t);
 
 #endif

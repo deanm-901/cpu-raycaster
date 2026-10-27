@@ -1,4 +1,4 @@
-files=(images/*.png)
+files=(images/*.png images/*/*.png)
 symbols=()
 names=()
 

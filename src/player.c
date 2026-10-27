@@ -44,14 +44,14 @@ void Player_inputVelocity(Player* player) {
     if (player->a < 0)    player->a += 2*PI;
     if (player->a > 2*PI) player->a -= 2*PI;
 
-    player->vel[X] = player->inp[X]*cos(player->a) + player->inp[Y]*cos(player->a+PI/2);
-    player->vel[Y] = player->inp[X]*sin(player->a) + player->inp[Y]*sin(player->a+PI/2);
+    player->wvel[X] = player->inp[X]*cos(player->a) + player->inp[Y]*cos(player->a+PI/2);
+    player->wvel[Y] = player->inp[X]*sin(player->a) + player->inp[Y]*sin(player->a+PI/2);
 
-    float normal_dem = sqrt(player->vel[X]*player->vel[X] + player->vel[Y]*player->vel[Y]);
+    float normal_dem = sqrt(player->wvel[X]*player->wvel[X] + player->wvel[Y]*player->wvel[Y]);
     if (normal_dem == 0) return;
 
-    player->vel[X] = player->vel[X]/normal_dem;
-    player->vel[Y] = player->vel[Y]/normal_dem;
+    player->wvel[X] = player->wvel[X] * player->speed/normal_dem;
+    player->wvel[Y] = player->wvel[Y] * player->speed/normal_dem;
 }
 
 void Player_handleCollision(Player* player, Map* map, double dt, App* app) {
@@ -124,8 +124,13 @@ void Player_handleCollision(Player* player, Map* map, double dt, App* app) {
 }
 
 void Player_handleVelocity(Player* player, double dt) {
-    player->pos[X] += player->vel[X]*dt*player->speed;
-    player->pos[Y] += player->vel[Y]*dt*player->speed;
+    player->vel[X] = lerp(player->vel[X], player->wvel[X], dt*PLAYER_FRICTION);
+    player->vel[Y] = lerp(player->vel[Y], player->wvel[Y], dt*PLAYER_FRICTION);
+}
+
+void Player_handlePosition(Player* player, double dt) {
+    player->pos[X] += player->vel[X]*dt;
+    player->pos[Y] += player->vel[Y]*dt;
     player->a += player->vela;
     player->ap += player->velap;
 
@@ -216,7 +221,7 @@ RayData Player_castRay(Player* player, Map* map, double angle) {
 
 double walk_anim_amm = 0;
 void Player_walkAnimation(Player* player, double dt) {
-    if (player->vel[X] == 0 && player->vel[Y] == 0 && walk_anim_amm != 0) {
+    if (player->wvel[X] == 0 && player->wvel[Y] == 0 && walk_anim_amm != 0) {
         walk_anim_amm = 0;
         return;
     }

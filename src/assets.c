@@ -1,65 +1,49 @@
 #include "assets.h"
-
 static unsigned char asset_0[] = {
 #embed "../images/atlas.png"
 };
-
 static unsigned char asset_1[] = {
 #embed "../images/font1.png"
 };
-
 static unsigned char asset_2[] = {
 #embed "../images/sky.png"
 };
-
 static unsigned char asset_3[] = {
 #embed "../images/starman/starman0.png"
 };
-
 static unsigned char asset_4[] = {
 #embed "../images/starman/starman10.png"
 };
-
 static unsigned char asset_5[] = {
 #embed "../images/starman/starman11.png"
 };
-
 static unsigned char asset_6[] = {
 #embed "../images/starman/starman1.png"
 };
-
 static unsigned char asset_7[] = {
 #embed "../images/starman/starman2.png"
 };
-
 static unsigned char asset_8[] = {
 #embed "../images/starman/starman3.png"
 };
-
 static unsigned char asset_9[] = {
 #embed "../images/starman/starman4.png"
 };
-
 static unsigned char asset_10[] = {
 #embed "../images/starman/starman5.png"
 };
-
 static unsigned char asset_11[] = {
 #embed "../images/starman/starman6.png"
 };
-
 static unsigned char asset_12[] = {
 #embed "../images/starman/starman7.png"
 };
-
 static unsigned char asset_13[] = {
 #embed "../images/starman/starman8.png"
 };
-
 static unsigned char asset_14[] = {
 #embed "../images/starman/starman9.png"
 };
-
 void InitAssetData() {
     setImageHolderIndex(asset_0, sizeof asset_0, "atlas.png");
     setImageHolderIndex(asset_1, sizeof asset_1, "font1.png");

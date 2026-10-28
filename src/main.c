@@ -167,6 +167,10 @@ static void handleInput() {
                         map.sprites[0].special_anim.b_running = true;
                     }
 
+                    if (input.key.keysym.scancode == SDL_SCANCODE_E) {
+                        map.sprites[0].b_spin = !map.sprites[0].b_spin;
+                    }
+
                     Player_handleKeyboardInput(&player, &input.key, 1);
                     break;
                 case SDL_KEYUP:

@@ -61,6 +61,11 @@ void setImageHolderIndex(unsigned char png_data[], size_t png_size, const char* 
 ImageData* getImageData(const char* key) {
     HashMapItem* item = HashMap_get(image_holder.image_map, key);
     
+    if (item == NULL) {
+        printf("ERROR: Image key '%s' not found in cache\n", key);
+        return NULL;
+    }
+
     return (ImageData*)item->value.value;
 }
 

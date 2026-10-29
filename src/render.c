@@ -340,7 +340,10 @@ void renderSprite(SpriteAttr* sprite, App* app, Player* player) {
     float img_ang = pa-sprite->a+PI+(PI/sprite->rotation_imgs.img_amm);
     if (img_ang > 2*PI) img_ang -= 2*PI;
     if (img_ang < 0)    img_ang += 2*PI;
-    const int frame = ((img_ang)/(2*PI))*sprite->rotation_imgs.img_amm;
+    int frame = ((img_ang)/(2*PI))*sprite->rotation_imgs.img_amm;
+    if (frame >= sprite->rotation_imgs.img_amm || frame < 0) {
+        frame = 0;
+    }
 
     img = getImageData(sprite->rotation_imgs.img_keys[frame]);
     if (sprite->b_spin) 

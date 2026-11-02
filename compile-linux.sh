@@ -1,3 +1,7 @@
+## It comes as no suprise that you need linux 
+## and the dependencies of this program to run 
+## this shell command
+
 mkdir -p comp/linux
 
 compile_norm() {

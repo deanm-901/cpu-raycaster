@@ -33,9 +33,11 @@ typedef struct _SpriteImageList {
 typedef struct _SpriteAnim {
     SpriteImageList img_list;
     size_t current_frame;
-    uint8_t b_running;
     int anim_fps;
-    float dt;
+    float dt; // summation of time per frame
+    uint8_t b_running;
+    uint8_t b_loop;
+    uint8_t b_rtrn_aft_end; // return to the base rotation img / animaton after the animation has concluded
 } SpriteAnim;
 
 typedef struct _SpriteAttr {

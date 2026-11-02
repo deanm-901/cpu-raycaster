@@ -296,9 +296,17 @@ static void findAnimSpriteImg(SpriteAttr* sprite, ImageData** img) {
     }
     
     if (sprite->special_anim.current_frame >= sprite->special_anim.img_list.img_amm) {
+        *img = getImageData(sprite->special_anim.img_list.img_keys[sprite->special_anim.current_frame-1]);
+
         sprite->special_anim.dt = 0.0;
-        sprite->special_anim.current_frame = 0;
-        sprite->special_anim.b_running = false;
+
+        if (sprite->special_anim.b_rtrn_aft_end) {
+            sprite->special_anim.current_frame = 0;
+            sprite->special_anim.b_running = sprite->special_anim.b_loop;
+        } else {
+            sprite->special_anim.b_running = true;
+        }
+        
         return;
     }
 
@@ -307,7 +315,7 @@ static void findAnimSpriteImg(SpriteAttr* sprite, ImageData** img) {
     *img = getImageData(sprite->special_anim.img_list.img_keys[sprite->special_anim.current_frame]);
 }
 
-void renderSprite(SpriteAttr* sprite, App* app, Player* player) {
+void renderSprite(SpriteAttr* sprite, App* app, Player* player, Map* map) {
     const float dx = sprite->pos[X]-player->pos[X], dy = sprite->pos[Y]-player->pos[Y];
     const float pa = atan2f(dy, dx);
     
@@ -334,6 +342,8 @@ void renderSprite(SpriteAttr* sprite, App* app, Player* player) {
 
     const double focal_length = SCREEN_WIDTH / (2.0 * tan(FOV / 2.0));
     const double horizon = SCREEN_HEIGHT/2 + focal_length*tan(player->ap);
+
+    const float map_light = (float)map->mapT[coordToIndex((int)sprite->pos[X], (int)sprite->pos[Y], MAP_MAX_X)].light_lvl/0xFF;
 
     ImageData* img;
 
@@ -375,6 +385,7 @@ void renderSprite(SpriteAttr* sprite, App* app, Player* player) {
             float v = (float)(i+c_startY-startY)/lineH;
 
             uint32_t pixel = img->pixels[coordToIndex(u*img->image.width, v*img->image.height, img->image.width)];
+            pixel = ColorMult(pixel, map_light, map_light, map_light, 1.0);
 
             App_setPixel(app, x, i+c_startY, pixel, 1.0/depth);
         }

@@ -1,4 +1,5 @@
-// TODO 0: Sprite angles
+// TODO 0: Actors
+// TODO 1: Map Editor
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -164,7 +165,7 @@ static void handleInput() {
                     }
 
                     if (input.key.keysym.scancode == SDL_SCANCODE_SPACE) {
-                        map.sprites[0].special_anim.b_running = true;
+                        map.sprites[0].special_anim.b_running = !map.sprites[0].special_anim.b_running;
                     }
 
                     if (input.key.keysym.scancode == SDL_SCANCODE_E) {
@@ -289,7 +290,7 @@ static void renderSprites() {
     for (int i=0;i<map.sprites_amm;i++) {
         SpriteAttr* sprite = &map.sprites[i];
 
-        renderSprite(sprite, &app, &player);
+        renderSprite(sprite, &app, &player, &map);
     }
 }
 
@@ -314,6 +315,8 @@ static void initSprites() {
         SpriteAnim anim = {
             .img_list=anim_img,
             .anim_fps=12,
+            .b_loop=false,
+            .b_rtrn_aft_end=true,
         };
         
         SpriteImageList rot = {
@@ -406,6 +409,8 @@ int main(int argc, char* argv[]) {
 
         // velocity input conversion //
         Player_inputVelocity(&player);
+
+        map.sprites[0].pos[Y] = 3.8*sin(TIME_NOW/2000.0) + 4;
 
         // player velocity //
         Player_handleVelocity(&player, dt);

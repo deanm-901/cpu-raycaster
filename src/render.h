@@ -26,7 +26,7 @@ void renderLine(App* app, int p1[2], int p2[2], uint32_t color);
 void renderStrip(App* app, RayData* data, Player* player, Map* map, int posX, float deg_amm);
 void renderImage(App* app, ImageData* data, Rect rect, float zbuffer);
 void renderText(App* app, ImageData* font, uint8_t tile_w, uint8_t tile_h, const char* text, uint32_t pos_x, uint32_t pos_y, int scale, uint32_t color);
-void renderSprite(SpriteAttr* sprite, App* app, Player* player);
+void renderSprite(SpriteAttr* sprite, App* app, Player* player, Map* map);
 
 void* asyncRenderStripChunk(void* ctx);
 

@@ -9,6 +9,9 @@
 #define HASHMAP_RESIZE_FACTOR 2
 #define HASHMAP_MAX_LOAD 0.5
 
+#define HASHMAP_UNIQUE_KEY_IDX_AMM 128
+#define HASHMAP_UNIQUE_KEY_CHAR_SIZE 32
+
 #define HASHMAP_NO_IDX -1
 
 typedef struct _HashMapValue {
@@ -28,6 +31,8 @@ typedef struct _HashMap {
     size_t collision_arr_size;
     size_t collision_arr_count;
     size_t last_deleted_col_idx;
+    // TODO -- UNIQUE HASHMAP KEYS
+    //char 
 } HashMap;
 
 HashMap* HashMap_init();

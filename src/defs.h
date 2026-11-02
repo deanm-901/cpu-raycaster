@@ -52,11 +52,13 @@
 #define MOUSE_SENS 0.00045
 #define LIMIT_PITCH 1
 #define ENABLE_PITCH 1
-#define LIMIT_FRAMERATE 1
+#define LIMIT_FRAMERATE 0
 
 int coordToIndex(int x, int y, int width);
 void indexToCoord(int index, int width, int* x, int* y);
 
 float lerp(float v0, float v1, float t);
+
+int currentRssBytes(unsigned long *bytes);
 
 #endif

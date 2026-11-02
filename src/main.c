@@ -27,19 +27,20 @@ FaceAttr face_types[MAX_FACETYPE_COUNT];
 App app;
 Player player = {.pos={1.5,1.5}, .vel={0,0}, .a=PI/2, .vela=0.0, .speed=2.0, .turn_speed=2, .height=0.55, .size=0.1};
 
-Map map = {.wall_height = 1.0, .sky_texture="sky.png"};
+Map map = {.wall_height = 1.0, .sky_texture="skyline.png"};
 
 // in ms
 Uint64 TIME_NOW = 0;
 Uint64 TIME_LAST = 0;
 // in seconds / frame
 double dt = 1;
-char debug_text[64];
+char debug_text[128];
 
 #define FPS_BUCKET_SIZE 16
 float fps_bucket[FPS_BUCKET_SIZE];
 size_t fps_bucket_count = 0;
 float fps_avg = 0.0;
+GraphData fps_graph_data = {0};
 
 RayData ray_data[SCREEN_WIDTH];
 
@@ -249,9 +250,18 @@ static void renderDebugText() {
 
         fps_avg = fps_sum/FPS_BUCKET_SIZE;
         fps_bucket_count = 0;
-    }
 
-    snprintf(debug_text, sizeof(debug_text), "FPS: %0.2f\nPOS: (%0.2f,%0.2f)\nANG: (%0.2f,%0.2f)", fps_avg, player.pos[X], player.pos[Y], player.a, player.ap);
+        graphDataAdd(&fps_graph_data, fps_avg);
+    }
+    // memory allocated
+    uint64_t bytes;
+    currentRssBytes(&bytes);
+
+    snprintf(debug_text, sizeof(debug_text), "FPS: %0.2f\nPOS: (%0.2f,%0.2f)\nANG: (%0.2f,%0.2f)\nRAM: %.2f MB", 
+            fps_avg, 
+            player.pos[X], player.pos[Y], 
+            player.a, player.ap,
+            bytes/(1000.0*1000.0));
 
     renderText(&app, getImageData("font1.png"), 8, 8, debug_text, MAP_MAX_X*MAP_REP_SCALE, 0, 1, C_WHITE);
 }
@@ -357,6 +367,16 @@ static void limitFPS() {
     }
 }
 
+static void renderDebugFPSGraph() {
+    Rect background = {
+        .color = C_BLACK,
+        .w = 64,
+        .h = 32,
+        .y = MAP_MAX_Y*MAP_REP_SCALE + 8
+    };
+    renderGraph(&fps_graph_data, "FPS AVG", background, C_GREEN, &app);
+}
+
 static void cleanup() {
     freeImageHolder();
     destroyThreads();
@@ -443,6 +463,8 @@ int main(int argc, char* argv[]) {
             renderRepPlayer();
 
             renderDebugText();
+
+            renderDebugFPSGraph();
         }
 
         presentFrame(&app);

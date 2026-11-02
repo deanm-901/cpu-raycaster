@@ -54,7 +54,7 @@ typedef struct _SpriteAttr {
     int spin_spd; // in frames per second
 } SpriteAttr;
 
-#define MapTileAttr_INIT(X) MapTileAttr X = {.light_lvl = 255, .flor_type = T_GRASS}
+#define MapTileAttr_INIT(X) MapTileAttr X = {.light_lvl = 32, .flor_type = T_GRASS}
 
 typedef struct _Map {
     float wall_height;

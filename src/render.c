@@ -443,3 +443,66 @@ void* asyncRenderStripChunk(void* ctx) {
 
     return NULL;
 }
+
+void graphDataAdd(GraphData* data, double num) {
+    if (data->data_amm < GRAPH_MAX_DATA) {
+        if (data->graph_max < num) data->graph_max = num;
+        if (data->graph_min > num) data->graph_min = num;
+
+        data->data[data->data_amm++] = num;
+        return;
+    }
+
+    // shift numbers <-
+    for (int i=0;i<GRAPH_MAX_DATA;i++) {
+        int i2 = (i+1<GRAPH_MAX_DATA)?i+1:i;
+
+        data->data[i] = data->data[i2];
+    }
+
+    // assign last number
+    data->data[GRAPH_MAX_DATA-1] = num;
+
+    // find max/min
+    double max = 0; 
+    double min = 9999999;
+    for (int i=0;i<GRAPH_MAX_DATA;i++) {
+        if (data->data[i] < min) min = data->data[i];
+        if (data->data[i] > max) max = data->data[i];
+    }
+    data->graph_max = max;
+    data->graph_min = min;
+
+    return;
+}
+
+void renderGraph(GraphData* data, const char* graphName, Rect graphBackground, uint32_t lineColor, App* app) {
+    ImageData* font = getImageData("font1.png");
+    char min[8],max[8];
+    snprintf(min, sizeof min, "%0.2f", data->graph_min);
+    snprintf(max, sizeof max, "%0.2f", data->graph_max);
+
+    // bg
+    renderRect(app, graphBackground);
+    // name
+    renderText(app, font, 8,8, graphName, graphBackground.x, graphBackground.y-8, 1, C_WHITE);
+    // min n max
+    renderText(app, font, 8,8, min, graphBackground.x+graphBackground.w,graphBackground.y+graphBackground.h-8, 1, C_WHITE);
+    renderText(app, font, 8,8, max, graphBackground.x+graphBackground.w,graphBackground.y, 1, C_WHITE);
+
+    // lines
+    if (data->graph_max == 0) return;
+
+    int pix_p_data = graphBackground.w/data->data_amm;
+    for (int i=0;i<data->data_amm;i++) {
+        int p1[2] = {
+            pix_p_data*i + graphBackground.x,
+            graphBackground.y+graphBackground.h - ((data->data[(i-1<0)?0:i-1] - data->graph_min)/(data->graph_max - data->graph_min))*graphBackground.h
+        };
+        int p2[2] = {
+            pix_p_data*(i+1) + graphBackground.x,
+            graphBackground.y+graphBackground.h - ((data->data[i] - data->graph_min)/(data->graph_max - data->graph_min))*graphBackground.h
+        };
+        renderLine(app, p1, p2, lineColor);
+    }
+}

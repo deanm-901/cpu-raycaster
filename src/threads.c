@@ -18,10 +18,17 @@ void InitRenderThread(RenderThread* rthread, int startX, int endX, void *(*func)
     pthread_cond_init(&rthread->ctx.cond_end, NULL);
     pthread_cond_init(&rthread->ctx.cond_start, NULL);
 
-    pthread_create(&rthread->thread, NULL, func, &rthread->ctx);
+    pthread_mutex_lock(&rthread->ctx.mutex);
 
     rthread->ctx.startX = startX;
     rthread->ctx.endX = endX;
+    rthread->ctx.should_exit = 0;
+    rthread->ctx.is_done = true;
+    rthread->ctx.is_ready = false;
+    
+    pthread_mutex_unlock(&rthread->ctx.mutex);
+
+    pthread_create(&rthread->thread, NULL, func, &rthread->ctx);
 }
 
 void RenderThreadSubmitJob(RenderThread* rthread) {

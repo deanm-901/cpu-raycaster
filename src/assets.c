@@ -12,13 +12,13 @@ static unsigned char asset_3[] = {
 #embed "../images/starman/starman0.png"
 };
 static unsigned char asset_4[] = {
-#embed "../images/starman/starman10.png"
+#embed "../images/starman/starman1.png"
 };
 static unsigned char asset_5[] = {
-#embed "../images/starman/starman11.png"
+#embed "../images/starman/starman10.png"
 };
 static unsigned char asset_6[] = {
-#embed "../images/starman/starman1.png"
+#embed "../images/starman/starman11.png"
 };
 static unsigned char asset_7[] = {
 #embed "../images/starman/starman2.png"
@@ -49,9 +49,9 @@ void InitAssetData() {
     setImageHolderIndex(asset_1, sizeof asset_1, "font1.png");
     setImageHolderIndex(asset_2, sizeof asset_2, "sky.png");
     setImageHolderIndex(asset_3, sizeof asset_3, "starman0.png");
-    setImageHolderIndex(asset_4, sizeof asset_4, "starman10.png");
-    setImageHolderIndex(asset_5, sizeof asset_5, "starman11.png");
-    setImageHolderIndex(asset_6, sizeof asset_6, "starman1.png");
+    setImageHolderIndex(asset_4, sizeof asset_4, "starman1.png");
+    setImageHolderIndex(asset_5, sizeof asset_5, "starman10.png");
+    setImageHolderIndex(asset_6, sizeof asset_6, "starman11.png");
     setImageHolderIndex(asset_7, sizeof asset_7, "starman2.png");
     setImageHolderIndex(asset_8, sizeof asset_8, "starman3.png");
     setImageHolderIndex(asset_9, sizeof asset_9, "starman4.png");

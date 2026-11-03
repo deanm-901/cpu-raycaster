@@ -36,3 +36,42 @@ size_t Map_addSprite(Map* map, SpriteAttr sprite) {
 
     return idx;
 }
+
+Map Map_init() {
+    Map map = {0};
+
+    for (int i=0;i<MAP_MAX_X*MAP_MAX_Y;i++) {
+        MapTileAttr_INIT(def);
+        map.mapT[i] = def;
+    }
+
+    return map;
+}
+
+int Map_setFaceTexIdx(Map* map, const char* str, int idx) {
+    if (idx >= MAP_MAX_FACETEX || idx < 1) return 1;
+
+    snprintf(map->face_tex_idx[idx], sizeof(map->face_tex_idx[idx]), str);
+
+    return 0;
+}
+
+int Map_initFaceTexData(Map* map) {
+    for (int i=0;i<MAP_MAX_FACETEX;i++) {
+        map->face_tex_data[i] = NULL;
+
+        char str[MAP_MAX_FACETEX_CHAR];
+        strncpy(str, map->face_tex_idx[i], MAP_MAX_FACETEX_CHAR - 1);
+        str[MAP_MAX_FACETEX_CHAR-1] = '\0';
+
+        if (str[0] == '\0') continue;
+
+        ImageData* ptr = getImageData(str);
+
+        if (ptr == NULL) return 1;
+        
+        map->face_tex_data[i] = ptr;
+    }
+
+    return 0;
+}

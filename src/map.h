@@ -2,23 +2,14 @@
 #define MAP_H
 
 #include "defs.h"
+#include "image-holder.h"
 #include <stdlib.h>
 #include <stdint.h>
 
-typedef enum __attribute__((__packed__)) _MapFaceType {
-    T_NONE,
-    T_HOMER,
-    T_PIZZA,
-    T_GRASS,
-    T_BRICK,
-    T_TILES,
-    T_BCKRM,
-} MapFaceType;
-
 typedef struct __attribute__((__packed__)) _MapTileAttr {
     uint8_t light_lvl;
-    MapFaceType clng_type;
-    MapFaceType flor_type;
+    uint8_t clng_type;
+    uint8_t flor_type;
 } MapTileAttr;
 
 
@@ -54,24 +45,27 @@ typedef struct _SpriteAttr {
     int spin_spd; // in frames per second
 } SpriteAttr;
 
-#define MapTileAttr_INIT(X) MapTileAttr X = {.light_lvl = 32, .flor_type = T_GRASS}
+#define MapTileAttr_INIT(X) MapTileAttr X = {.light_lvl = 255}
+
+#define MAP_MAX_FACETEX 32
+#define MAP_MAX_FACETEX_CHAR 32
 
 typedef struct _Map {
     float wall_height;
-    MapFaceType mapH[MAP_MAX_H];           // horizontal wall face type
-    MapFaceType mapV[MAP_MAX_V];           // vertical wall face type
+    char face_tex_idx[MAP_MAX_FACETEX][MAP_MAX_FACETEX_CHAR];
+    ImageData* face_tex_data[MAP_MAX_FACETEX];
+    uint8_t mapH[MAP_MAX_H];               // horizontal wall face type
+    uint8_t mapV[MAP_MAX_V];               // vertical wall face type
     MapTileAttr mapT[MAP_MAX_X*MAP_MAX_Y]; // map tile attributes
     SpriteAttr sprites[MAX_MAP_SPRITES];
     size_t sprites_amm;
     char* sky_texture;
 } Map;
 
-typedef struct _FaceAttr {
-    int atlas_pos[2];
-    int isCollidable;
-} FaceAttr;
-
 size_t Map_addSprite(Map* map, SpriteAttr sprite);
+Map Map_init();
+int Map_initFaceTexData(Map* map);
+int Map_setFaceTexIdx(Map* map, const char* str, int idx);
 
 void SpriteImageList_init(SpriteImageList* list);
 

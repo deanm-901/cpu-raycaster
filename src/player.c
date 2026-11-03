@@ -75,12 +75,12 @@ void Player_handleCollision(Player* player, Map* map, double dt, App* app) {
             int index_v = coordToIndex(floor(player->pos[X]+x), floor(player->pos[Y]+y), MAP_MAX_X+1);
 
             if (index_h >= 0 && index_h < MAP_MAX_H &&
-                map->mapH[index_h] != T_NONE) {
+                map->mapH[index_h] != 0) {
                 wall_det_h[wall_det_h_idx++] = index_h;
             }
 
             if (index_v >= 0 && index_v < MAP_MAX_V &&
-                map->mapV[index_v] != T_NONE) {
+                map->mapV[index_v] != 0) {
                 wall_det_v[wall_det_v_idx++] = index_v;
             }
         }
@@ -168,10 +168,10 @@ RayData Player_castRay(Player* player, Map* map, double angle) {
 
     int hit_tile[2];
 
-    MapFaceType type = T_NONE;
+    int idx = 0;
     RayHitSide side = VERTICAL;
     double distance = 0.0;
-    while (type == T_NONE && distance < RAYCAST_MAX_DIST) {
+    while (idx == 0 && distance < RAYCAST_MAX_DIST) {
         if (lengths[VERT] < lengths[HORZ]) {
             tile_pos[X] += tile_step[X];
             distance = lengths[VERT];
@@ -181,7 +181,7 @@ RayData Player_castRay(Player* player, Map* map, double angle) {
             hit_tile[X] = tile_pos[X]+tile_correct[X]-(ray_dir[X] > 0);
             hit_tile[Y] = tile_pos[Y];
 
-            type = map->mapV[coordToIndex(tile_pos[X]+tile_correct[X], tile_pos[Y], MAP_MAX_X+1)];
+            idx = map->mapV[coordToIndex(tile_pos[X]+tile_correct[X], tile_pos[Y], MAP_MAX_X+1)];
         } else {
             tile_pos[Y] += tile_step[Y];
             distance = lengths[HORZ];
@@ -191,7 +191,7 @@ RayData Player_castRay(Player* player, Map* map, double angle) {
             hit_tile[X] = tile_pos[X];
             hit_tile[Y] = tile_pos[Y]+tile_correct[Y]-(ray_dir[Y] > 0);
 
-            type = map->mapH[coordToIndex(tile_pos[X], tile_pos[Y]+tile_correct[Y], MAP_MAX_X)];
+            idx = map->mapH[coordToIndex(tile_pos[X], tile_pos[Y]+tile_correct[Y], MAP_MAX_X)];
         }
 
         if (tile_pos[X] < 0 || tile_pos[X] >= MAP_MAX_X || tile_pos[Y] < 0 || tile_pos[Y] >= MAP_MAX_Y) break;
@@ -210,7 +210,7 @@ RayData Player_castRay(Player* player, Map* map, double angle) {
     }
 
     RayData data = {.dist = distance, 
-                    .type = type, 
+                    .idx = idx, 
                     .end_pos = {end_pos[X], end_pos[Y]}, 
                     .hit_tile = {hit_tile[X], hit_tile[Y]},
                     .side = side, 

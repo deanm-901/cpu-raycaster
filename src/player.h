@@ -23,7 +23,7 @@ typedef struct {
     double dist;
     double end_pos[2];
     int hit_tile[2];
-    MapFaceType type;
+    int idx;
     RayHitSide side;
     double u;
 } RayData;

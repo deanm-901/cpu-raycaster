@@ -22,12 +22,10 @@
 // there is one image holder per instance of the executable file
 ImageHolder image_holder;
 
-FaceAttr face_types[MAX_FACETYPE_COUNT];
-
 App app;
 Player player = {.pos={1.5,1.5}, .vel={0,0}, .a=PI/2, .vela=0.0, .speed=2.0, .turn_speed=2, .height=0.55, .size=0.1};
 
-Map map = {.wall_height = 1.0, .sky_texture="skyline.png"};
+Map map;
 
 // in ms
 Uint64 TIME_NOW = 0;
@@ -76,7 +74,7 @@ static void renderRepFloor() {
 
 static void renderRepWalls() {
     for (int wh=0;wh<MAP_MAX_H;wh++) { // horizontal
-        if (map.mapH[wh] == T_NONE) continue;
+        if (map.mapH[wh] == 0) continue;
 
         int x = MAP_REP_SCALE*(wh % MAP_MAX_X), y = MAP_REP_SCALE*(wh / MAP_MAX_X);
 
@@ -85,7 +83,7 @@ static void renderRepWalls() {
         renderLine(&app, p1, p2, C_WHITE);
     } 
     for (int wv=0;wv<MAP_MAX_V;wv++) { // vertical
-        if (map.mapV[wv] == T_NONE) continue;
+        if (map.mapV[wv] == 0) continue;
 
         int x = MAP_REP_SCALE*(wv % (MAP_MAX_X+1)), y = MAP_REP_SCALE*(wv / (MAP_MAX_X+1));
 
@@ -213,30 +211,8 @@ static void renderRaycast() {
     }
 }
 
-static void initFaceTypes() {
-    FaceAttr homer = {.isCollidable=1,.atlas_pos={1,0}};
-    face_types[T_HOMER] = homer;
-    FaceAttr pizza = {.isCollidable=1,.atlas_pos={2,0}};
-    face_types[T_PIZZA] = pizza;
-    FaceAttr grass = {.isCollidable=1,.atlas_pos={0,0}};
-    face_types[T_GRASS] = grass;
-    FaceAttr brick = {.isCollidable=1,.atlas_pos={0,1}};
-    face_types[T_BRICK] = brick;
-    FaceAttr tiles = {.isCollidable=1,.atlas_pos={1,1}};
-    face_types[T_TILES] = tiles;
-    FaceAttr bckrm = {.isCollidable=1,.atlas_pos={2,1}};
-    face_types[T_BCKRM] = bckrm;
-}
-
 static void initImages() {
     InitAssetData();
-}
-
-static void initMapDefaults() {
-    for (int i=0;i<MAP_MAX_X*MAP_MAX_Y;i++) {
-        MapTileAttr_INIT(def);
-        map.mapT[i] = def;
-    }
 }
 
 static void renderDebugText() {
@@ -254,7 +230,7 @@ static void renderDebugText() {
         graphDataAdd(&fps_graph_data, fps_avg);
     }
     // memory allocated
-    uint64_t bytes;
+    unsigned long bytes;
     currentRssBytes(&bytes);
 
     snprintf(debug_text, sizeof(debug_text), "FPS: %0.2f\nPOS: (%0.2f,%0.2f)\nANG: (%0.2f,%0.2f)\nRAM: %.2f MB", 
@@ -389,33 +365,43 @@ int main(int argc, char* argv[]) {
 
     App_init(&app);
 
-    initMapDefaults();
+    map = Map_init();
+
+    map.wall_height = 1.0;
+    map.sky_texture = "sky.png";
+
+    Map_setFaceTexIdx(&map, "f_brick.png", 1);
+    Map_setFaceTexIdx(&map, "f_floor.png", 2);
+    Map_setFaceTexIdx(&map, "f_grass.png", 3);
+    Map_setFaceTexIdx(&map, "f_homer.png", 4);
+    Map_setFaceTexIdx(&map, "f_pizza.png", 5);
+    Map_setFaceTexIdx(&map, "f_bkrms.png", 6);
 
     for(int i=0;i<8;i++){ 
-        map.mapH[i] = T_BRICK;
-        map.mapH[i+128] = T_BRICK;
+        map.mapH[i] = 1;
+        map.mapH[i+128] = 1;
 
-        map.mapV[17*i] = T_BRICK;
-        map.mapV[17*i+8] = T_BRICK;
+        map.mapV[17*i] = 1;
+        map.mapV[17*i+8] = 1;
 
         for (int j=0;j<8;j++) {
-            map.mapT[i*MAP_MAX_X+j].clng_type = T_BRICK;
-            map.mapT[i*MAP_MAX_X+j].flor_type = T_TILES;
+            map.mapT[i*MAP_MAX_X+j].clng_type = 1;
+            map.mapT[i*MAP_MAX_X+j].flor_type = 2;
             map.mapT[i*MAP_MAX_X+j].light_lvl = 255*pow(0.85,j+i);
         }
     }
-    map.mapV[17*3+8] = T_NONE;
-    map.mapH[20] = T_HOMER;
-    map.mapH[21] = T_PIZZA;
-    map.mapV[21] = T_BRICK;
-    map.mapV[38] = T_BRICK;
-    map.mapV[39] = T_BRICK;
+    map.mapV[17*3+8] = 0;
+    map.mapH[20] = 4;
+    map.mapH[21] = 5;
+    map.mapV[21] = 1;
+    map.mapV[38] = 1;
+    map.mapV[39] = 1;
     
     image_holder = initImageHolder();
+    Map_initFaceTexData(&map);
     
     initImages();
     initThreads();
-    initFaceTypes();
     initSprites();
 
     atexit(cleanup);

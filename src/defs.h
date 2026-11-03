@@ -15,9 +15,11 @@
 #define MAP_MAX_H MAP_MAX_X*(MAP_MAX_Y+1)
 #define MAP_MAX_V MAP_MAX_Y*(MAP_MAX_X+1)
 
-#define X 0
-#define Y 1
-#define Z 2
+enum Axes {
+    X = 0,
+    Y = 1,
+    Z = 2
+};
 
 #define PI 3.14159
 

@@ -365,6 +365,7 @@ static void renderDebugFPSGraph() {
 static void cleanup() {
     freeImageHolder();
     destroyThreads();
+    Map_destroyActors(&map);
     App_free(&app);
     SDL_Quit();
 }

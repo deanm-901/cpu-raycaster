@@ -96,3 +96,9 @@ int Map_callActorFuncs(Map* map) {
         (*map->actors[i].Func_Frame)(&map->actors[i].attr);
     }
 }
+
+void Map_destroyActors(Map* map) {
+    for (int i=0;i<map->actors_amm;i++) {
+        (*map->actors[i].Func_Destroy)(&map->actors[i].attr);
+    }
+}

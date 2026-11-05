@@ -45,15 +45,18 @@ typedef struct _SpriteAttr {
     int spin_spd; // in frames per second
 } SpriteAttr;
 
+#define ACTOR_MAX_DATA_PTRS 16
+
 typedef struct _ActorAttr {
     SpriteAttr* map_sprite;
     float pos[2];
-    float speed;
+    void* data[ACTOR_MAX_DATA_PTRS];
 } ActorAttr;
 
 typedef struct _Actor {
     void (*Func_Init)(ActorAttr*);
-    void (*Func_Frame)(ActorAttr*); // dt
+    void (*Func_Frame)(ActorAttr*);
+    void (*Func_Destroy)(ActorAttr*);
 
     ActorAttr attr;
 } Actor;
@@ -93,6 +96,7 @@ size_t Map_addActor(Map* map, Actor actor);
 int Map_initFaceTexData(Map* map);
 int Map_setFaceTexIdx(Map* map, const char* str, int idx);
 int Map_callActorFuncs(Map* map);
+void Map_destroyActors(Map* map);
 
 void SpriteImageList_init(SpriteImageList* list);
 

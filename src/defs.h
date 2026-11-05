@@ -1,6 +1,8 @@
 #ifndef DEFS_H
 #define DEFS_H
 
+#include "stdint.h"
+
 #define SCREEN_WIDTH  560 //280
 #define SCREEN_HEIGHT 420 //210
 #define SCREEN_RESOLUTION_SCALE 1
@@ -9,8 +11,8 @@
 #define MAP_REP_SCALE 12
 #define MAP_REP_PLAYER_SIZE 3
 
-#define MAP_MAX_X 16
-#define MAP_MAX_Y 16
+#define MAP_MAX_X 32
+#define MAP_MAX_Y 32
 
 #define MAP_MAX_H MAP_MAX_X*(MAP_MAX_Y+1)
 #define MAP_MAX_V MAP_MAX_Y*(MAP_MAX_X+1)
@@ -37,8 +39,6 @@ enum Axes {
 #define MAX_IMAGE_COUNT 128
 #define MAX_FACETYPE_COUNT 128
 
-#define MAX_MAP_SPRITES 64
-
 #define PLAYER_COLLISION_RADIUS 1
 
 #define TEXTURE_ATLAS_W 32
@@ -61,6 +61,9 @@ void indexToCoord(int index, int width, int* x, int* y);
 
 float lerp(float v0, float v1, float t);
 
-int currentRssBytes(unsigned long *bytes);
+int currentRssBytes(uint64_t *bytes);
+
+// hey! I know this!
+float Q_rsqrt(float num);
 
 #endif

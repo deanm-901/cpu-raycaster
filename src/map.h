@@ -14,7 +14,7 @@ typedef struct __attribute__((__packed__)) _MapTileAttr {
 
 
 #define MAX_SPRITE_IMAGES 12
-#define MAX_SPRITE_IMG_KEY_CHAR 24
+#define MAX_SPRITE_IMG_KEY_CHAR 16
 
 typedef struct _SpriteImageList {
     char img_keys[MAX_SPRITE_IMAGES][MAX_SPRITE_IMG_KEY_CHAR];
@@ -45,27 +45,54 @@ typedef struct _SpriteAttr {
     int spin_spd; // in frames per second
 } SpriteAttr;
 
-#define MapTileAttr_INIT(X) MapTileAttr X = {.light_lvl = 255}
+typedef struct _ActorAttr {
+    SpriteAttr* map_sprite;
+    float pos[2];
+    float speed;
+} ActorAttr;
+
+typedef struct _Actor {
+    void (*Func_Init)(ActorAttr*);
+    void (*Func_Frame)(ActorAttr*); // dt
+
+    ActorAttr attr;
+} Actor;
+
+#define MapTileAttr_INIT(X) MapTileAttr X = {.light_lvl = 255, .flor_type = 3}
 
 #define MAP_MAX_FACETEX 32
 #define MAP_MAX_FACETEX_CHAR 32
+#define MAP_MAX_SPRITES 64
+#define MAP_MAX_ACTORS  64
 
 typedef struct _Map {
-    float wall_height;
+    // texture data
+    char* sky_texture;
     char face_tex_idx[MAP_MAX_FACETEX][MAP_MAX_FACETEX_CHAR];
     ImageData* face_tex_data[MAP_MAX_FACETEX];
+
+    // wall/ceiling/floor data
+    float wall_height;
     uint8_t mapH[MAP_MAX_H];               // horizontal wall face type
     uint8_t mapV[MAP_MAX_V];               // vertical wall face type
     MapTileAttr mapT[MAP_MAX_X*MAP_MAX_Y]; // map tile attributes
-    SpriteAttr sprites[MAX_MAP_SPRITES];
+
+    // sprite/actor data
+    SpriteAttr sprites[MAP_MAX_SPRITES];
     size_t sprites_amm;
-    char* sky_texture;
+    Actor actors[MAP_MAX_ACTORS];
+    size_t actors_amm;
+
+    // player data
+    float player_init_pos[2];
 } Map;
 
-size_t Map_addSprite(Map* map, SpriteAttr sprite);
 Map Map_init();
+size_t Map_addSprite(Map* map, SpriteAttr sprite);
+size_t Map_addActor(Map* map, Actor actor);
 int Map_initFaceTexData(Map* map);
 int Map_setFaceTexIdx(Map* map, const char* str, int idx);
+int Map_callActorFuncs(Map* map);
 
 void SpriteImageList_init(SpriteImageList* list);
 

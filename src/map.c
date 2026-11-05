@@ -25,20 +25,11 @@ void SpriteImageList_init(SpriteImageList* list) {
     checkMark(list);
 }
 
-size_t Map_addSprite(Map* map, SpriteAttr sprite) {
-    size_t idx = map->sprites_amm;
-
-    checkMark(&sprite.rotation_imgs);
-
-    map->sprites[idx] = sprite;
-
-    map->sprites_amm++;
-
-    return idx;
-}
-
 Map Map_init() {
     Map map = {0};
+
+    map.player_init_pos[X] = 1.5;
+    map.player_init_pos[Y] = 1.5;
 
     for (int i=0;i<MAP_MAX_X*MAP_MAX_Y;i++) {
         MapTileAttr_INIT(def);
@@ -74,4 +65,34 @@ int Map_initFaceTexData(Map* map) {
     }
 
     return 0;
+}
+
+size_t Map_addSprite(Map* map, SpriteAttr sprite) {
+    size_t idx = map->sprites_amm;
+
+    checkMark(&sprite.rotation_imgs);
+
+    map->sprites[idx] = sprite;
+
+    map->sprites_amm++;
+
+    return idx;
+}
+
+size_t Map_addActor(Map* map, Actor actor){
+    size_t idx = map->actors_amm;
+    
+    map->actors[idx] = actor;
+
+    (*map->actors[idx].Func_Init)(&map->actors[idx].attr);
+
+    map->actors_amm++;
+
+    return idx;
+}
+
+int Map_callActorFuncs(Map* map) {
+    for (int i=0;i<map->actors_amm; i++) {
+        (*map->actors[i].Func_Frame)(&map->actors[i].attr);
+    }
 }

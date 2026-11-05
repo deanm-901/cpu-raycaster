@@ -18,12 +18,13 @@
 #include "hashmap.h"
 #include "threads.h"
 #include "assets.h"
+#include "actor-funcs/actor-basic.h"
 
 // there is one image holder per instance of the executable file
 ImageHolder image_holder;
 
 App app;
-Player player = {.pos={1.5,1.5}, .vel={0,0}, .a=PI/2, .vela=0.0, .speed=2.0, .turn_speed=2, .height=0.55, .size=0.1};
+Player player = {.vel={0,0}, .a=PI/2, .vela=0.0, .speed=2.0, .turn_speed=2, .height=0.55, .size=0.1};
 
 Map map;
 
@@ -34,13 +35,15 @@ Uint64 TIME_LAST = 0;
 double dt = 1;
 char debug_text[128];
 
-#define FPS_BUCKET_SIZE 16
+#define FPS_BUCKET_SIZE 32
 float fps_bucket[FPS_BUCKET_SIZE];
 size_t fps_bucket_count = 0;
 float fps_avg = 0.0;
 GraphData fps_graph_data = {0};
 
 RayData ray_data[SCREEN_WIDTH];
+
+char render_map = false;
 
 #define REND_THREAD_AMM 4
 RenderThread render_threads[REND_THREAD_AMM];
@@ -163,17 +166,17 @@ static void handleInput() {
                         );
                     }
 
-                    if (input.key.keysym.scancode == SDL_SCANCODE_SPACE) {
-                        map.sprites[0].special_anim.b_running = !map.sprites[0].special_anim.b_running;
-                    }
-
-                    if (input.key.keysym.scancode == SDL_SCANCODE_E) {
-                        map.sprites[0].b_spin = !map.sprites[0].b_spin;
+                    if (input.key.keysym.scancode == SDL_SCANCODE_TAB) {
+                        render_map = true;
                     }
 
                     Player_handleKeyboardInput(&player, &input.key, 1);
                     break;
                 case SDL_KEYUP:
+                    if (input.key.keysym.scancode == SDL_SCANCODE_TAB) {
+                        render_map = false;
+                    }
+
                     Player_handleKeyboardInput(&player, &input.key, -1);
                     break;
                 case SDL_MOUSEMOTION:
@@ -211,6 +214,11 @@ static void renderRaycast() {
     }
 }
 
+static void initPlayer() {
+    player.pos[X] = map.player_init_pos[X];
+    player.pos[Y] = map.player_init_pos[Y];
+}
+
 static void initImages() {
     InitAssetData();
 }
@@ -230,7 +238,7 @@ static void renderDebugText() {
         graphDataAdd(&fps_graph_data, fps_avg);
     }
     // memory allocated
-    unsigned long bytes;
+    uint64_t bytes;
     currentRssBytes(&bytes);
 
     snprintf(debug_text, sizeof(debug_text), "FPS: %0.2f\nPOS: (%0.2f,%0.2f)\nANG: (%0.2f,%0.2f)\nRAM: %.2f MB", 
@@ -239,7 +247,7 @@ static void renderDebugText() {
             player.a, player.ap,
             bytes/(1000.0*1000.0));
 
-    renderText(&app, getImageData("font1.png"), 8, 8, debug_text, MAP_MAX_X*MAP_REP_SCALE, 0, 1, C_WHITE);
+    renderText(&app, getImageData("font1.png"), 8, 8, debug_text, 0, 0, 1, C_WHITE);
 }
 
 static void initThreads() {
@@ -346,9 +354,10 @@ static void limitFPS() {
 static void renderDebugFPSGraph() {
     Rect background = {
         .color = C_BLACK,
-        .w = 64,
+        .w = 96,
         .h = 32,
-        .y = MAP_MAX_Y*MAP_REP_SCALE + 8
+        .y = SCREEN_HEIGHT-33,
+        .x = 1
     };
     renderGraph(&fps_graph_data, "FPS AVG", background, C_GREEN, &app);
 }
@@ -376,13 +385,23 @@ int main(int argc, char* argv[]) {
     Map_setFaceTexIdx(&map, "f_homer.png", 4);
     Map_setFaceTexIdx(&map, "f_pizza.png", 5);
     Map_setFaceTexIdx(&map, "f_bkrms.png", 6);
+    Map_setFaceTexIdx(&map, "f_bush.png",  7);
+
+    for(int i=0;i<MAP_MAX_X;i++) {
+        map.mapH[i] = 7;
+        map.mapH[MAP_MAX_X*MAP_MAX_Y+i] = 7;
+    }
+    for(int i=0;i<MAP_MAX_Y;i++) {
+        map.mapV[i*(MAP_MAX_X+1)] = 7;
+        map.mapV[i*(MAP_MAX_X+1) + MAP_MAX_X] = 7;
+    }
 
     for(int i=0;i<8;i++){ 
         map.mapH[i] = 1;
-        map.mapH[i+128] = 1;
+        map.mapH[i+(MAP_MAX_X*8)] = 1;
 
-        map.mapV[17*i] = 1;
-        map.mapV[17*i+8] = 1;
+        map.mapV[(MAP_MAX_X+1)*i] = 1;
+        map.mapV[(MAP_MAX_X+1)*i+8] = 1;
 
         for (int j=0;j<8;j++) {
             map.mapT[i*MAP_MAX_X+j].clng_type = 1;
@@ -390,19 +409,22 @@ int main(int argc, char* argv[]) {
             map.mapT[i*MAP_MAX_X+j].light_lvl = 255*pow(0.85,j+i);
         }
     }
-    map.mapV[17*3+8] = 0;
-    map.mapH[20] = 4;
-    map.mapH[21] = 5;
-    map.mapV[21] = 1;
-    map.mapV[38] = 1;
-    map.mapV[39] = 1;
+    map.mapV[(MAP_MAX_X+1)*3+8] = 0;
+    map.mapH[MAP_MAX_X+4] = 4;
+    map.mapH[MAP_MAX_X+5] = 5;
+    map.mapV[(MAP_MAX_X+1)+4] = 1;
+    map.mapV[(MAP_MAX_X+1)*2+4] = 1;
+    map.mapV[(MAP_MAX_X+1)*2+5] = 1;
     
     image_holder = initImageHolder();
-    Map_initFaceTexData(&map);
     
     initImages();
     initThreads();
-    initSprites();
+    initPlayer();
+    
+    InitBasicActor(&map);
+    
+    Map_initFaceTexData(&map);
 
     atexit(cleanup);
 
@@ -411,12 +433,11 @@ int main(int argc, char* argv[]) {
         TIME_NOW = SDL_GetTicks();
         dt = (TIME_NOW-TIME_LAST)/1000.0;
 
+        // input //
         handleInput();
 
         // velocity input conversion //
         Player_inputVelocity(&player);
-
-        map.sprites[0].pos[Y] = 3.8*sin(TIME_NOW/2000.0) + 4;
 
         // player velocity //
         Player_handleVelocity(&player, dt);
@@ -430,6 +451,9 @@ int main(int argc, char* argv[]) {
         // player anim //
         Player_walkAnimation(&player, dt);
 
+        // map actor funcs //
+        Map_callActorFuncs(&map);
+
         // render frame //
         App_clearBuffer(&app);
 
@@ -439,15 +463,14 @@ int main(int argc, char* argv[]) {
 
         renderSprites();
 
-        if (debug) {
+        if (render_map) {
             renderRepFloor();
-
             renderRepWalls();
-
             renderRepSprites();
-
             renderRepPlayer();
+        }
 
+        if (debug && !render_map) {
             renderDebugText();
 
             renderDebugFPSGraph();

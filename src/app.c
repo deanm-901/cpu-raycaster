@@ -28,7 +28,7 @@ void App_init(App* app) {
         exit(1);
     }
     app->screen_pixels = malloc(SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(uint32_t)); // !!
-    app->screen_zbuffer = malloc(SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(float)); // !!
+    app->screen_zbuffer = malloc(SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(float)); //   !!
 
     app->screen_texture = SDL_CreateTexture(app->renderer, 
                                             SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STREAMING, 

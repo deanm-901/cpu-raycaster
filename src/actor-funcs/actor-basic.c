@@ -10,6 +10,9 @@ static void func_InitBasic(ActorAttr *attr) {
     attr->data[0] = malloc(sizeof(float));
 
     *((float*)attr->data[0]) = 1.0f; // speed
+
+    attr->pos[X] = player.pos[X];
+    attr->pos[Y] = player.pos[Y];
 }
 
 static void func_FrameBasic(ActorAttr *attr) {
@@ -22,8 +25,8 @@ static void func_FrameBasic(ActorAttr *attr) {
 
     float speed = *((float*)attr->data[0]);
 
-    attr->pos[X] += dx*i_dh * dt * speed;
-    attr->pos[Y] += dy*i_dh * dt * speed;
+    //attr->pos[X] += dx*i_dh * dt * speed;
+    //attr->pos[Y] += dy*i_dh * dt * speed;
 }
 
 static void func_DestroyBasic(ActorAttr *attr) {

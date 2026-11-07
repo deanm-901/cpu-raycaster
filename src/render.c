@@ -468,7 +468,7 @@ void graphDataAdd(GraphData* data, double num) {
 }
 
 void renderGraph(GraphData* data, const char* graphName, Rect graphBackground, uint32_t lineColor, App* app) {
-    ImageData* font = getImageData("font1.png");
+    ImageData* font = getImageData("font2.png");
     char min[8],max[8];
     snprintf(min, sizeof min, "%0.2f", data->graph_min);
     snprintf(max, sizeof max, "%0.2f", data->graph_max);
@@ -476,10 +476,10 @@ void renderGraph(GraphData* data, const char* graphName, Rect graphBackground, u
     // bg
     renderRect(app, graphBackground);
     // name
-    renderText(app, font, 8,8, graphName, graphBackground.x, graphBackground.y-8, 1, C_WHITE);
+    renderText(app, font, 5,8, graphName, graphBackground.x, graphBackground.y-8, 1, C_WHITE);
     // min n max
-    renderText(app, font, 8,8, min, graphBackground.x+graphBackground.w,graphBackground.y+graphBackground.h-8, 1, C_WHITE);
-    renderText(app, font, 8,8, max, graphBackground.x+graphBackground.w,graphBackground.y, 1, C_WHITE);
+    renderText(app, font, 5,8, min, graphBackground.x+graphBackground.w,graphBackground.y+graphBackground.h-8, 1, C_WHITE);
+    renderText(app, font, 5,8, max, graphBackground.x+graphBackground.w,graphBackground.y, 1, C_WHITE);
 
     // lines
     if (data->graph_max == 0) return;

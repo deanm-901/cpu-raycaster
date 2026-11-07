@@ -15,9 +15,6 @@ static void checkMark(SpriteImageList* img_list) {
 
         for (int i=0;i<img_list->img_amm;i++) {
             snprintf(img_list->img_keys[i], MAX_SPRITE_IMG_KEY_CHAR, "%.*s%d%s", (int)prefix_len, pattern, i, suffix);
-            
-            printf("[checkMark Debug] Generated Key [%d]: '%s' at address %p\n", 
-                   i, img_list->img_keys[i], (void*)img_list->img_keys[i]);
         }
     }
 }

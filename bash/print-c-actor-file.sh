@@ -1,7 +1,7 @@
 if [[ -z "$1" ]] then
     exit 1
 fi
-echo "#include \"$1.h\""
+echo "#include \"actor-$1.h\""
 cat <<'EOF'
 #include "../player.h"
 #include "../defs.h"
@@ -17,6 +17,9 @@ static void Frame() {
 static void Destroy() {
     // Fires when actor is destroyed
 }
+
+
+
 EOF
 echo "void InitActor_$1(Map* map) {"
 cat <<'EOF'
@@ -25,7 +28,7 @@ cat <<'EOF'
         .img_keys = {
             // example: "starman%n.png"
         },
-        .img_amm = 12
+        .img_amm = 0 // example: 12 (sets 12 img_keys to "starman{n}.png" where n is an int from 0-11)
     };
     SpriteAttr sprite_attr = {
         .rotation_imgs = sprite_rotation,
@@ -37,14 +40,14 @@ cat <<'EOF'
     // actor data
     ActorAttr actor_attr = {
         .map_sprite = &map->sprites[sprite_idx],
-    }
+    };
 
     Actor actor = {
         .Func_Frame = &Frame,
         .Func_Init = &Init,
         .Func_Destroy = &Destroy,
         .attr = actor_attr,
-    }
+    };
 
     // create actor
     Map_addActor(map, actor);

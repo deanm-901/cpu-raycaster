@@ -17,6 +17,7 @@ compile_debug() {
 }
 
 ./bash/build-assets-c.sh > src/assets.c
+#./bash/build-maps-c.sh > src/map-imports.c
 
 #mv src/assets.c.tmp src/assets.c
 

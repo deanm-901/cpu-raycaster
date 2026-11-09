@@ -431,6 +431,9 @@ int main(int argc, char* argv[]) {
 
     atexit(cleanup);
 
+    char map_name[32] = "test";
+    Map_writeToFile(&map, map_name);
+
     for(;;) {
         TIME_LAST = TIME_NOW;
         TIME_NOW = SDL_GetTicks();

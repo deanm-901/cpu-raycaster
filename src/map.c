@@ -99,3 +99,21 @@ void Map_destroyActors(Map* map) {
         (*map->actors[i].Func_Destroy)(&map->actors[i].attr);
     }
 }
+
+void Map_writeToFile(Map* map, char name[32]) {
+    FILE *file;
+    strncat(name, ".map", sizeof(name)-sizeof(".map")-1);
+
+    file = fopen(name, "wb");
+    if (file == NULL) {
+        perror("File failed to open for writing");
+        return;
+    }
+
+    size_t written = fwrite(map, sizeof(Map), 1, file);
+    if (written != 1) {
+        perror("Error writing Map to file");
+    }
+    
+    fclose(file);
+}

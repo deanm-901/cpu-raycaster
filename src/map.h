@@ -100,4 +100,7 @@ void Map_destroyActors(Map* map);
 
 void SpriteImageList_init(SpriteImageList* list);
 
+void Map_writeToFile(Map* map, char name[32]);
+Map* Map_readToFile(const char* name);
+
 #endif

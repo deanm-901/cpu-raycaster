@@ -16,6 +16,7 @@ $ sudo pacman -S mingw-w64-x86_64-gcc \
 mkdir -p comp/windows
 
 ./bash/build-assets-c.sh > src/assets.c
+./bash/build-maps-c.sh > src/map-imports.c
 
 x86_64-w64-mingw32-gcc -O0 -g src/*.c src/*/*.c -o comp/windows/run.exe \
   -static-libgcc \

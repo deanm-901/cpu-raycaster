@@ -1,4 +1,4 @@
-files=(maps/*.map maps/*/*.map)
+files=(maps/*.map)
 symbols=()
 names=()
 
@@ -26,9 +26,9 @@ cat <<'EOF'
 
 static HashMap* map_map;
 
-static void setIndex(unsigned char data[], size_t data_size[], const char* key) {
+static void setIndex(unsigned char data[], size_t data_size, const char* key) {
     Map* map = malloc(sizeof(Map));
-    memset(map, data, data_size);
+    memcpy(map, data, data_size);
 
     HashMap_set(map_map, key, map, sizeof(Map));
 }
@@ -42,5 +42,10 @@ for i in "${!symbols[@]}"; do
 done
 
 cat <<'EOF'
+}
+
+Map* getMapData(const char* key) {
+    HashMapItem* item = HashMap_get(map_map, key);
+    return (Map*)item->value.value;
 }
 EOF

@@ -102,7 +102,7 @@ void Map_destroyActors(Map* map) {
 
 void Map_writeToFile(Map* map, char name[32]) {
     FILE *file;
-    strncat(name, ".map", sizeof(name)-sizeof(".map")-1);
+    strncat(name, ".map", (sizeof(char)*32)-sizeof(".map")-1);
 
     file = fopen(name, "wb");
     if (file == NULL) {

@@ -90,17 +90,36 @@ typedef struct _Map {
     float player_init_pos[2];
 } Map;
 
+typedef struct _MapSaveData {
+    char sky_texture[32];
+    char face_tex_idx[MAP_MAX_FACETEX][MAP_MAX_FACETEX_CHAR];
+    
+    float wall_height;
+    uint8_t mapH[MAP_MAX_H];               // horizontal wall face type
+    uint8_t mapV[MAP_MAX_V];               // vertical wall face type
+    MapTileAttr mapT[MAP_MAX_X*MAP_MAX_Y]; // map tile attributes
+
+    // sprite/actor data
+    SpriteAttr sprites[MAP_MAX_SPRITES];
+    size_t sprites_amm;
+    Actor actors[MAP_MAX_ACTORS];
+    size_t actors_amm;
+
+    // player data
+    float player_init_pos[2];
+} MapSaveData;
+
 Map Map_init();
 size_t Map_addSprite(Map* map, SpriteAttr sprite);
 size_t Map_addActor(Map* map, Actor actor);
 int Map_initFaceTexData(Map* map);
 int Map_setFaceTexIdx(Map* map, const char* str, int idx);
 int Map_callActorFuncs(Map* map);
-void Map_destroyActors(Map* map);
+void Map_free(Map* map);
 
 void SpriteImageList_init(SpriteImageList* list);
 
-void Map_writeToFile(Map* map, char name[32]);
-Map* Map_readToFile(const char* name);
+void Map_writeToFile(Map* map, const char* name);
+void Map_readFromFile(Map* map, const char* name);
 
 #endif

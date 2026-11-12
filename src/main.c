@@ -369,7 +369,7 @@ static void renderDebugFPSGraph() {
 static void cleanup() {
     freeImageHolder();
     destroyThreads();
-    Map_destroyActors(&map);
+    Map_free(&map);
     App_free(&app);
     SDL_Quit();
 }
@@ -380,46 +380,47 @@ int main(int argc, char* argv[]) {
     App_init(&app);
 
     map = Map_init();
+    Map_readFromFile(&map, "test.map");
 
-    map.wall_height = 1.0;
-    map.sky_texture = "sky.png";
+    // map.wall_height = 1.0;
+    // map.sky_texture = "sky.png";
 
-    Map_setFaceTexIdx(&map, "f_brick.png", 1);
-    Map_setFaceTexIdx(&map, "f_floor.png", 2);
-    Map_setFaceTexIdx(&map, "f_grass.png", 3);
-    Map_setFaceTexIdx(&map, "f_homer.png", 4);
-    Map_setFaceTexIdx(&map, "f_pizza.png", 5);
-    Map_setFaceTexIdx(&map, "f_bkrms.png", 6);
-    Map_setFaceTexIdx(&map, "f_bush.png",  7);
+    // Map_setFaceTexIdx(&map, "f_brick.png", 1);
+    // Map_setFaceTexIdx(&map, "f_floor.png", 2);
+    // Map_setFaceTexIdx(&map, "f_grass.png", 3);
+    // Map_setFaceTexIdx(&map, "f_homer.png", 4);
+    // Map_setFaceTexIdx(&map, "f_pizza.png", 5);
+    // Map_setFaceTexIdx(&map, "f_bkrms.png", 6);
+    // Map_setFaceTexIdx(&map, "f_bush.png",  7);
 
-    for(int i=0;i<MAP_MAX_X;i++) {
-        map.mapH[i] = 7;
-        map.mapH[MAP_MAX_X*MAP_MAX_Y+i] = 7;
-    }
-    for(int i=0;i<MAP_MAX_Y;i++) {
-        map.mapV[i*(MAP_MAX_X+1)] = 7;
-        map.mapV[i*(MAP_MAX_X+1) + MAP_MAX_X] = 7;
-    }
+    // for(int i=0;i<MAP_MAX_X;i++) {
+    //     map.mapH[i] = 7;
+    //     map.mapH[MAP_MAX_X*MAP_MAX_Y+i] = 7;
+    // }
+    // for(int i=0;i<MAP_MAX_Y;i++) {
+    //     map.mapV[i*(MAP_MAX_X+1)] = 7;
+    //     map.mapV[i*(MAP_MAX_X+1) + MAP_MAX_X] = 7;
+    // }
 
-    for(int i=0;i<8;i++){ 
-        map.mapH[i] = 1;
-        map.mapH[i+(MAP_MAX_X*8)] = 1;
+    // for(int i=0;i<8;i++){ 
+    //     map.mapH[i] = 1;
+    //     map.mapH[i+(MAP_MAX_X*8)] = 1;
 
-        map.mapV[(MAP_MAX_X+1)*i] = 1;
-        map.mapV[(MAP_MAX_X+1)*i+8] = 1;
+    //     map.mapV[(MAP_MAX_X+1)*i] = 1;
+    //     map.mapV[(MAP_MAX_X+1)*i+8] = 1;
 
-        for (int j=0;j<8;j++) {
-            map.mapT[i*MAP_MAX_X+j].clng_type = 1;
-            map.mapT[i*MAP_MAX_X+j].flor_type = 2;
-            map.mapT[i*MAP_MAX_X+j].light_lvl = 255*pow(0.85,j+i);
-        }
-    }
-    map.mapV[(MAP_MAX_X+1)*3+8] = 0;
-    map.mapH[MAP_MAX_X+4] = 4;
-    map.mapH[MAP_MAX_X+5] = 5;
-    map.mapV[(MAP_MAX_X+1)+4] = 1;
-    map.mapV[(MAP_MAX_X+1)*2+4] = 1;
-    map.mapV[(MAP_MAX_X+1)*2+5] = 1;
+    //     for (int j=0;j<8;j++) {
+    //         map.mapT[i*MAP_MAX_X+j].clng_type = 1;
+    //         map.mapT[i*MAP_MAX_X+j].flor_type = 2;
+    //         map.mapT[i*MAP_MAX_X+j].light_lvl = 255*pow(0.85,j+i);
+    //     }
+    // }
+    // map.mapV[(MAP_MAX_X+1)*3+8] = 0;
+    // map.mapH[MAP_MAX_X+4] = 4;
+    // map.mapH[MAP_MAX_X+5] = 5;
+    // map.mapV[(MAP_MAX_X+1)+4] = 1;
+    // map.mapV[(MAP_MAX_X+1)*2+4] = 1;
+    // map.mapV[(MAP_MAX_X+1)*2+5] = 1;
     
     image_holder = initImageHolder();
     
@@ -427,12 +428,11 @@ int main(int argc, char* argv[]) {
     initThreads();
     initPlayer();
     
-    Map_initFaceTexData(&map);
+    //Map_initFaceTexData(&map);
 
     atexit(cleanup);
 
-    char map_name[32] = "test";
-    Map_writeToFile(&map, map_name);
+    //Map_writeToFile(&map, "test");
 
     for(;;) {
         TIME_LAST = TIME_NOW;

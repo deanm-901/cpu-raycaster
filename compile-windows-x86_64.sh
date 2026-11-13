@@ -13,12 +13,12 @@ $ sudo pacman -S mingw-w64-x86_64-gcc \
 #No, I dont want a makefile
 ##!!!!##
 
-mkdir -p comp/windows
+mkdir -p __comp/windows
 
-./bash/build-assets-c.sh > src/assets.c
-./bash/build-maps-c.sh > src/map-imports.c
+./_bash/build-assets-c.sh > src/assets.c
+./_bash/build-maps-c.sh > src/map-imports.c
 
-x86_64-w64-mingw32-gcc -O0 -g src/*.c src/*/*.c -o comp/windows/run.exe \
+x86_64-w64-mingw32-gcc -O0 -g src/*.c src/*/*.c -o __comp/windows/run.exe \
   -static-libgcc \
   -Wl,-Bstatic -lmingw32 -lSDL2main -lSDL2 -lpng -lz -lpthread \
   -Wl,-Bdynamic \

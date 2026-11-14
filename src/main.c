@@ -386,7 +386,7 @@ int main(int argc, char* argv[]) {
     initPlayer();
 
     map = Map_init();
-    Map_readFromFile(&map, "test.map");
+    Map_readFromFile(&map, "maps/test.map");
 
     atexit(cleanup);
 

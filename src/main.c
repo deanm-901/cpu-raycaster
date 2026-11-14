@@ -292,53 +292,6 @@ static void renderSprites() {
     }
 }
 
-static void initSprites() {
-    for(int i=0;i<1;i++) {
-        SpriteImageList anim_img = {
-            .img_keys = {
-                "starman0.png",
-                "starman0.png",
-                "starman11.png",
-                "starman1.png",
-                "starman11.png",
-                "starman1.png",
-                "starman11.png",
-                "starman1.png",
-                "starman0.png",
-                "starman0.png",
-            },
-            .img_amm = 10
-        };
-
-        SpriteAnim anim = {
-            .img_list=anim_img,
-            .anim_fps=12,
-            .b_loop=false,
-            .b_rtrn_aft_end=true,
-        };
-        
-        SpriteImageList rot = {
-            .img_keys = {
-                "starman%n.png"
-            },
-            .img_amm = 12
-        };
-
-        SpriteAttr sprite1 = {
-            .rotation_imgs = rot,
-            .pos = {1.5+i,2.5},
-            .size = 0.8,
-            .b_spin = false,
-            .b_frontfacing = false,
-            .special_anim = anim,
-            .spin_spd = 12,
-            .a = 0,
-        };
-        
-        Map_addSprite(&map, sprite1);
-    }
-}
-
 static void limitFPS() {
     const int display_num = SDL_GetWindowDisplayIndex(app.window);
     SDL_DisplayMode display;
@@ -389,6 +342,25 @@ int main(int argc, char* argv[]) {
     Map_readFromFile(&map, "maps/test.map");
 
     atexit(cleanup);
+
+        printf("MapSaveData size: %zu\n", sizeof(MapSaveData));
+    printf("size_t size: %zu\n", sizeof(size_t));
+
+    printf("sky_texture: %zu\n", offsetof(MapSaveData, sky_texture));
+    printf("face_tex_idx: %zu\n", offsetof(MapSaveData, face_tex_idx));
+    printf("wall_height: %zu\n", offsetof(MapSaveData, wall_height));
+    printf("mapH: %zu\n", offsetof(MapSaveData, mapH));
+    printf("mapV: %zu\n", offsetof(MapSaveData, mapV));
+    printf("mapT: %zu\n", offsetof(MapSaveData, mapT));
+    printf("sprites: %zu\n", offsetof(MapSaveData, sprites));
+    printf("sprites_amm: %zu\n", offsetof(MapSaveData, sprites_amm));
+    printf("actors: %zu\n", offsetof(MapSaveData, actors));
+    printf("actors_amm: %zu\n", offsetof(MapSaveData, actors_amm));
+    printf("player_init_pos: %zu\n", offsetof(MapSaveData, player_init_pos));
+
+    printf("MapTileAttr size: %zu\n", sizeof(MapTileAttr));
+    printf("SpriteAttr size: %zu\n", sizeof(SpriteAttr));
+    printf("Actor size: %zu\n", sizeof(Actor));
 
     for(;;) {
         TIME_LAST = TIME_NOW;

@@ -52,7 +52,7 @@ enum Axes {
 // settings
 #define DEBUG 1
 #define MOUSE_SENS 0.00045
-#define LIMIT_PITCH 1
+#define LIMIT_PITCH 0
 #define ENABLE_PITCH 1
 #define LIMIT_FRAMERATE 0
 

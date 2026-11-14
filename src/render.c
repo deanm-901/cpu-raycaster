@@ -314,14 +314,18 @@ void renderSprite(SpriteAttr* sprite, App* app, Player* player, Map* map) {
 
     const float sizea = atan2f(sprite->size/2, pdist);
     const float rel = remainderf(pa-player->a, 2*PI);
-    float amin  = rel-sizea, amax = rel+sizea;
 
-    const float aperpix = FOV/SCREEN_WIDTH;
+    const double focal_length = SCREEN_WIDTH / (2.0 * tan(FOV / 2.0));
+    const double horizon = SCREEN_HEIGHT/2 + focal_length*tan(player->ap);
+    const float depth = pdist * cos(rel); 
+    
+    const float pixsize = (float)(focal_length * sprite->size / depth);
 
-    const float pixsize = sizea*2/aperpix;
+    const float pixcntr = SCREEN_WIDTH * 0.5f + (float)(focal_length * tanf(rel));
+    const float pixleft = pixcntr - pixsize * 0.5f;
 
-    const int pixstrt = (amin+FOV/2)/aperpix;
-    const int pix_end = (amax+FOV/2)/aperpix;
+    const int pixstrt = (int)floorf(pixleft);
+    const int pix_end = (int)ceilf(pixleft+pixsize);
 
     if (pix_end < 0 || pixstrt > SCREEN_WIDTH) return;
 
@@ -329,10 +333,6 @@ void renderSprite(SpriteAttr* sprite, App* app, Player* player, Map* map) {
     const int c_pix_end = (pix_end>SCREEN_WIDTH)? SCREEN_WIDTH:pix_end;
 
     const int pixstrt_diff = c_pixstrt-pixstrt;
-    const int pix_end_diff = c_pix_end-pix_end;
-
-    const double focal_length = SCREEN_WIDTH / (2.0 * tan(FOV / 2.0));
-    const double horizon = SCREEN_HEIGHT/2 + focal_length*tan(player->ap);
 
     const float map_light = (float)map->mapT[coordToIndex((int)sprite->pos[X], (int)sprite->pos[Y], MAP_MAX_X)].light_lvl/0xFF;
 
@@ -356,7 +356,15 @@ void renderSprite(SpriteAttr* sprite, App* app, Player* player, Map* map) {
         findAnimSpriteImg(sprite, &img);
     }
 
-    const float depth = pdist * cos(pa-player->a); 
+    const float camZ = player->height+player->height_disp;
+    const int topY    = horizon - focal_length * (sprite->size-camZ) / depth;
+    const int bottomY = horizon + focal_length * camZ / depth;
+    const int startY = floorf(topY);
+    const int endY   = ceilf(bottomY);
+    const int c_startY = (startY<0)?0:startY;
+    const int c_endY   = (endY>SCREEN_HEIGHT)?SCREEN_HEIGHT:endY;
+    const int lineH  = endY-startY;
+    const int c_lineH = c_endY-c_startY;
 
     for (int x=c_pixstrt;x<c_pix_end;x++) {
         if (ray_data[x].dist < depth) continue;
@@ -365,23 +373,16 @@ void renderSprite(SpriteAttr* sprite, App* app, Player* player, Map* map) {
 
         float u = (float)(tx-c_pixstrt)/pixsize;
 
-        const int startY = horizon - focal_length * (sprite->size-player->height-player->height_disp) / depth;
-        const int endY   = horizon + focal_length * (player->height+player->height_disp) / depth;
-        const int c_startY = (startY<0)?0:startY;
-        const int c_endY   = (endY>SCREEN_HEIGHT)?SCREEN_HEIGHT:endY;
-
         if (endY < 0 || startY > SCREEN_HEIGHT) continue;
-        
-        const int lineH  = endY-startY;
-        const int c_lineH = c_endY-c_startY;
 
         for (int i=0;i<c_lineH;i++) {
-            float v = (float)(i+c_startY-startY)/lineH;
+            const int y = i+c_startY;
+            float v = (float)(y+0.5f-topY)/lineH;
 
             uint32_t pixel = img->pixels[coordToIndex(u*img->image.width, v*img->image.height, img->image.width)];
             pixel = ColorMult(pixel, map_light, map_light, map_light, 1.0);
 
-            App_setPixel(app, x, i+c_startY, pixel, 1.0/depth);
+            App_setPixel(app, x, y, pixel, 1.0/depth);
         }
     }
 }

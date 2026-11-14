@@ -5,11 +5,13 @@
 extern Player player;
 extern double dt;
 
+#define speedData 0
+
 static void func_InitBasic(ActorAttr *attr) {
     //attr->map_sprite->special_anim.b_running = 1;
-    attr->data[0] = malloc(sizeof(float));
+    attr->data[speedData] = malloc(sizeof(float));
 
-    *((float*)attr->data[0]) = 1.0f; // speed
+    *((float*)attr->data[speedData]) = 1.0f; // speed
 
     attr->pos[X] = player.pos[X];
     attr->pos[Y] = player.pos[Y];
@@ -23,14 +25,14 @@ static void func_FrameBasic(ActorAttr *attr) {
     float dy = player.pos[Y]-attr->pos[Y];
     float i_dh = Q_rsqrt(dx*dx+dy*dy);
 
-    float speed = *((float*)attr->data[0]);
+    float speed = *((float*)attr->data[speedData]);
 
-    //attr->pos[X] += dx*i_dh * dt * speed;
-    //attr->pos[Y] += dy*i_dh * dt * speed;
+    attr->pos[X] += dx*i_dh * dt * speed;
+    attr->pos[Y] += dy*i_dh * dt * speed;
 }
 
 static void func_DestroyBasic(ActorAttr *attr) {
-    free(attr->data[0]);
+    free(attr->data[speedData]);
 }
 
 void InitBasicActor(Map* map) {

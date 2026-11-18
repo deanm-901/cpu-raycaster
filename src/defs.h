@@ -33,7 +33,6 @@ enum Axes {
 #define DEG_TO_RAD 0.0174532925
 #define RAD_TO_DEG 57.29578
 
-#define FOV (60.0 * DEG_TO_RAD)
 #define RAYCAST_RES 1
 
 #define MAX_IMAGE_COUNT 128
@@ -50,11 +49,17 @@ enum Axes {
 #define PLAYER_FRICTION 10
 
 // settings
-#define DEBUG 1
-#define MOUSE_SENS 0.00045
-#define LIMIT_PITCH 0
-#define ENABLE_PITCH 1
-#define LIMIT_FRAMERATE 0
+typedef struct _GameSettings {
+    int b_debug;
+    int b_limit_pitch;
+    int b_enable_pitch;
+    int b_limit_framerate;
+    int b_map_editor;
+    double mouse_sens;
+    double fov;
+} GameSettings;
+
+#define GameSettings_SetDefault(X) X = (GameSettings){.b_debug = 1, .b_limit_pitch = 0, .b_enable_pitch = 1, .b_limit_framerate = 0, .mouse_sens = 0.00045, .fov = 60.0*DEG_TO_RAD};
 
 int coordToIndex(int x, int y, int width);
 void indexToCoord(int index, int width, int* x, int* y);

@@ -9,6 +9,7 @@ extern RayData ray_data[SCREEN_WIDTH];
 
 extern Uint64 TIME_NOW;
 extern double dt;
+extern GameSettings game_settings;
 
 void presentFrame(App* app) {
     SDL_UpdateTexture(app->screen_texture, NULL, app->screen_pixels, SCREEN_WIDTH * sizeof(uint32_t));
@@ -173,7 +174,7 @@ AsyncRenderCtx render_strips[SCREEN_WIDTH];
 
 void renderStrip(App* app, RayData* data, Player* player, Map* map, int posX, float deg_amm) {
 
-    const double focal_length = SCREEN_WIDTH / (2.0 * tan(FOV / 2.0));
+    const double focal_length = SCREEN_WIDTH / (2.0 * tan(game_settings.fov / 2.0));
     const double horizon = SCREEN_HEIGHT/2 + focal_length*tan(player->ap);
 
     const float dist = data->dist * cos(deg_amm);
@@ -315,7 +316,7 @@ void renderSprite(SpriteAttr* sprite, App* app, Player* player, Map* map) {
     const float sizea = atan2f(sprite->size/2, pdist);
     const float rel = remainderf(pa-player->a, 2*PI);
 
-    const double focal_length = SCREEN_WIDTH / (2.0 * tan(FOV / 2.0));
+    const double focal_length = SCREEN_WIDTH / (2.0 * tan(game_settings.fov / 2.0));
     const double horizon = SCREEN_HEIGHT/2 + focal_length*tan(player->ap);
     const float depth = pdist * cos(rel); 
     

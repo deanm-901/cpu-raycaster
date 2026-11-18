@@ -6,14 +6,15 @@
 #include <math.h>
 
 extern double dt;
+extern GameSettings game_settings;
 
 void Player_handleMouseMotion(Player* player, SDL_MouseMotionEvent* input, App* app) {
     //if ((float)input->xrel * MOUSE_SENS == 0) return;
     if (!SDL_GetRelativeMouseMode()) return;
 
-    player->inpa += (float)input->xrel * MOUSE_SENS;
-    if (ENABLE_PITCH) 
-        player->inpap -= (float)input->yrel * MOUSE_SENS * 0.75;
+    player->inpa += (float)input->xrel * game_settings.mouse_sens;
+    if (game_settings.b_enable_pitch) 
+        player->inpap -= (float)input->yrel * game_settings.mouse_sens * 0.75;
 }
 void Player_handleKeyboardInput(Player* player, SDL_KeyboardEvent* input, int down) {
     if (input->repeat != 0) return;
@@ -134,7 +135,7 @@ void Player_handlePosition(Player* player, double dt) {
     player->a += player->vela;
     player->ap += player->velap;
 
-    if (LIMIT_PITCH) {
+    if (game_settings.b_limit_pitch) {
         if (player->ap < -PI/4) player->ap = -PI/4;
         if (player->ap > PI/4) player->ap = PI/4;
     }

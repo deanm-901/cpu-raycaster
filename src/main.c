@@ -1,5 +1,4 @@
-// TODO 0: Actors
-// TODO 1: Map Editor
+// TODO 0: Map Editor
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -27,6 +26,7 @@ App app;
 Player player = {.vel={0,0}, .a=PI/2, .vela=0.0, .speed=2.0, .turn_speed=2, .height=0.55, .size=0.1};
 
 Map map;
+GameSettings game_settings;
 
 // in ms
 Uint64 TIME_NOW = 0;
@@ -49,7 +49,7 @@ char render_map = false;
 RenderThread render_threads[REND_THREAD_AMM];
 
 static void renderBackground() {
-    double focal_length = SCREEN_WIDTH / (2.0 * tan(FOV / 2.0));
+    double focal_length = SCREEN_WIDTH / (2.0 * tan(game_settings.fov / 2.0));
 
     ImageData* sky = getImageData(map.sky_texture);
 
@@ -100,10 +100,10 @@ static void renderRepPlayer() {
     //angle line
     int p1[2] = {player.pos[X]*MAP_REP_SCALE, 
                  player.pos[Y]*MAP_REP_SCALE}, 
-        pa1[2] = {player.pos[X]*MAP_REP_SCALE+cos(player.a-(FOV/2))*MAP_REP_PLAYER_SIZE*3, 
-                 player.pos[Y]*MAP_REP_SCALE+sin(player.a-(FOV/2))*MAP_REP_PLAYER_SIZE*3},
-        pa2[2] = {player.pos[X]*MAP_REP_SCALE+cos(player.a+(FOV/2))*MAP_REP_PLAYER_SIZE*3, 
-                 player.pos[Y]*MAP_REP_SCALE+sin(player.a+(FOV/2))*MAP_REP_PLAYER_SIZE*3};
+        pa1[2] = {player.pos[X]*MAP_REP_SCALE+cos(player.a-(game_settings.fov/2))*MAP_REP_PLAYER_SIZE*3, 
+                 player.pos[Y]*MAP_REP_SCALE+sin(player.a-(game_settings.fov/2))*MAP_REP_PLAYER_SIZE*3},
+        pa2[2] = {player.pos[X]*MAP_REP_SCALE+cos(player.a+(game_settings.fov/2))*MAP_REP_PLAYER_SIZE*3, 
+                 player.pos[Y]*MAP_REP_SCALE+sin(player.a+(game_settings.fov/2))*MAP_REP_PLAYER_SIZE*3};
     
     //velocity line
     int vp[2] = {
@@ -140,6 +140,16 @@ static void renderRepPlayer() {
     renderRect(&app, player_rect);
 }
 
+static void renderRepMapData() { // TODO
+    for (int i=0;i<MAP_MAX_FACETEX;i++) {
+        ImageData* data = map.face_tex_data[i];
+
+        if (data == NULL) continue;
+
+        renderImage(&app, data, (Rect){.x = i*16 + 2, .y = 2, .w = 16, .h = 16}, 0);
+    }
+}
+
 static void handleInput() {
         player.inpa = 0;
         player.inpap = 0;
@@ -170,8 +180,8 @@ static void handleInput() {
                         render_map = true;
                     }
 
-                    if (input.key.keysym.scancode == SDL_SCANCODE_E) {
-                        InitBasicActor(&map);
+                    if (input.key.keysym.scancode == SDL_SCANCODE_E && game_settings.b_map_editor) {
+                        map.mapH[coordToIndex((int)player.pos[X], (int)player.pos[Y], MAP_MAX_X)] = 3;
                     }
 
                     Player_handleKeyboardInput(&player, &input.key, 1);
@@ -196,11 +206,11 @@ static void raycast() {
     const int amm = SCREEN_WIDTH;
 
     for (int i=0; i<amm; i++) {
-        double deg_amm = i*FOV/amm;
+        double deg_amm = i*game_settings.fov/amm;
 
-        ray_data[i] = Player_castRay(&player, &map, player.a+deg_amm-(FOV/2.0));
+        ray_data[i] = Player_castRay(&player, &map, player.a+deg_amm-(game_settings.fov/2.0));
 
-        renderStrip(&app, &ray_data[i], &player, &map, i, deg_amm-(FOV/2.0));
+        renderStrip(&app, &ray_data[i], &player, &map, i, deg_amm-(game_settings.fov/2.0));
     }
 
     //submit jobs
@@ -208,14 +218,6 @@ static void raycast() {
 
     // wait
     for (int i=0;i<REND_THREAD_AMM;i++) RenderThreadAwaitCompletion(&render_threads[i]);
-}
-
-static void renderRaycast() {
-    int amm = sizeof(ray_data)/sizeof(RayData);
-
-    for (int i=0; i<amm; i++) {
-        double deg_amm = i*FOV/amm;
-    }
 }
 
 static void initPlayer() {
@@ -328,9 +330,11 @@ static void cleanup() {
 }
 
 int main(int argc, char* argv[]) {
-    int debug = DEBUG;
-
     App_init(&app);
+
+    GameSettings_SetDefault(game_settings);
+    
+    game_settings.b_map_editor = (argc == 2 && !strcmp(argv[1], "map-editor"));
 
     image_holder = initImageHolder();
     
@@ -342,25 +346,6 @@ int main(int argc, char* argv[]) {
     Map_readFromFile(&map, "maps/test.map");
 
     atexit(cleanup);
-
-        printf("MapSaveData size: %zu\n", sizeof(MapSaveData));
-    printf("size_t size: %zu\n", sizeof(size_t));
-
-    printf("sky_texture: %zu\n", offsetof(MapSaveData, sky_texture));
-    printf("face_tex_idx: %zu\n", offsetof(MapSaveData, face_tex_idx));
-    printf("wall_height: %zu\n", offsetof(MapSaveData, wall_height));
-    printf("mapH: %zu\n", offsetof(MapSaveData, mapH));
-    printf("mapV: %zu\n", offsetof(MapSaveData, mapV));
-    printf("mapT: %zu\n", offsetof(MapSaveData, mapT));
-    printf("sprites: %zu\n", offsetof(MapSaveData, sprites));
-    printf("sprites_amm: %zu\n", offsetof(MapSaveData, sprites_amm));
-    printf("actors: %zu\n", offsetof(MapSaveData, actors));
-    printf("actors_amm: %zu\n", offsetof(MapSaveData, actors_amm));
-    printf("player_init_pos: %zu\n", offsetof(MapSaveData, player_init_pos));
-
-    printf("MapTileAttr size: %zu\n", sizeof(MapTileAttr));
-    printf("SpriteAttr size: %zu\n", sizeof(SpriteAttr));
-    printf("Actor size: %zu\n", sizeof(Actor));
 
     for(;;) {
         TIME_LAST = TIME_NOW;
@@ -404,15 +389,19 @@ int main(int argc, char* argv[]) {
             renderRepPlayer();
         }
 
-        if (debug && !render_map) {
+        if (game_settings.b_debug && !render_map) {
             renderDebugText();
 
             renderDebugFPSGraph();
         }
 
+        if (game_settings.b_map_editor && !render_map) {
+            renderRepMapData();
+        }
+
         presentFrame(&app);
 
         // delays every frame if over hz; helps free CPU time
-        if (LIMIT_FRAMERATE) limitFPS();
+        if (game_settings.b_limit_framerate) limitFPS();
     }
 }

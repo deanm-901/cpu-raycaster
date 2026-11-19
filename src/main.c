@@ -18,6 +18,7 @@
 #include "threads.h"
 #include "assets.h"
 #include "actor-funcs/actor-basic.h"
+#include "console.h"
 
 // there is one image holder per instance of the executable file
 ImageHolder image_holder;
@@ -27,6 +28,7 @@ Player player = {.vel={0,0}, .a=PI/2, .vela=0.0, .speed=2.0, .turn_speed=2, .hei
 
 Map map;
 GameSettings game_settings;
+Console console;
 
 // in ms
 Uint64 TIME_NOW = 0;
@@ -156,6 +158,9 @@ static void handleInput() {
     
         SDL_Event input;
         while(SDL_PollEvent(&input)) {
+            // console input //
+            Console_ReadTextInput(&console, input);
+
             switch (input.type) {
                 case SDL_QUIT:
                     exit(0);
@@ -333,6 +338,7 @@ int main(int argc, char* argv[]) {
     App_init(&app);
 
     GameSettings_SetDefault(game_settings);
+    Console_SetDefault(console);
     
     game_settings.b_map_editor = (argc == 2 && !strcmp(argv[1], "map-editor"));
 
@@ -351,6 +357,9 @@ int main(int argc, char* argv[]) {
         TIME_LAST = TIME_NOW;
         TIME_NOW = SDL_GetTicks();
         dt = (TIME_NOW-TIME_LAST)/1000.0;
+
+        // console update //
+        Console_Update(&console);
 
         // input //
         handleInput();
@@ -398,6 +407,8 @@ int main(int argc, char* argv[]) {
         if (game_settings.b_map_editor && !render_map) {
             renderRepMapData();
         }
+
+        Console_Render(&app, &console);
 
         presentFrame(&app);
 

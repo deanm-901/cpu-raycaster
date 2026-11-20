@@ -148,7 +148,7 @@ static void renderRepMapData() { // TODO
 
         if (data == NULL) continue;
 
-        renderImage(&app, data, (Rect){.x = i*16 + 2, .y = 2, .w = 16, .h = 16}, 0);
+        renderImage(&app, data, (Rect){.x = i*34, .y = 2, .w = 32, .h = 32}, 9999999);
     }
 }
 
@@ -189,14 +189,14 @@ static void handleInput() {
                         map.mapH[coordToIndex((int)player.pos[X], (int)player.pos[Y], MAP_MAX_X)] = 3;
                     }
 
-                    Player_handleKeyboardInput(&player, &input.key, 1);
+                    if (!console.b_visible) Player_handleKeyboardInput(&player, &input.key, 1);
                     break;
                 case SDL_KEYUP:
                     if (input.key.keysym.scancode == SDL_SCANCODE_TAB) {
                         render_map = false;
                     }
 
-                    Player_handleKeyboardInput(&player, &input.key, -1);
+                    if (!console.b_visible) Player_handleKeyboardInput(&player, &input.key, -1);
                     break;
                 case SDL_MOUSEMOTION:
                     Player_handleMouseMotion(&player, &input.motion, &app);
@@ -339,6 +339,7 @@ int main(int argc, char* argv[]) {
 
     GameSettings_SetDefault(game_settings);
     Console_SetDefault(console);
+    ConsoleCommands_Init();
     
     game_settings.b_map_editor = (argc == 2 && !strcmp(argv[1], "map-editor"));
 

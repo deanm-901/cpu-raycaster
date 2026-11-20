@@ -16,6 +16,8 @@
 #define C_DRKRED 0xFF800000
 #define C_DRKGRY 0xFF303030
 
+typedef uint32_t Color;
+
 // --WIP--
 uint32_t ColorMix(uint32_t c1, uint32_t c2, uint8_t w);
 

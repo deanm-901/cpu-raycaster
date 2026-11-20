@@ -4,8 +4,8 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#define HASHMAP_ITEMARR_SIZE 1000
-#define HASHMAP_COLLARR_SIZE 1000
+#define HASHMAP_ITEMARR_SIZE 512
+#define HASHMAP_COLLARR_SIZE 512
 #define HASHMAP_RESIZE_FACTOR 2
 #define HASHMAP_MAX_LOAD 0.5
 

@@ -143,6 +143,8 @@ static void renderRepPlayer() {
 }
 
 static void renderRepMapData() { // TODO
+    renderRect(&app, (Rect){.color = C_WHITE, .w = 34, .h = 3, .x = game_settings.face_place_idx*34 - 1, .y = 33});
+
     for (int i=0;i<MAP_MAX_FACETEX;i++) {
         ImageData* data = map.face_tex_data[i];
 
@@ -185,11 +187,24 @@ static void handleInput() {
                         render_map = true;
                     }
 
-                    if (input.key.keysym.scancode == SDL_SCANCODE_E && game_settings.b_map_editor) {
-                        map.mapH[coordToIndex((int)player.pos[X], (int)player.pos[Y], MAP_MAX_X)] = 3;
+                    if (input.key.keysym.scancode == SDL_SCANCODE_E && game_settings.b_map_editor && !console.b_visible) {
+                        if (player.a < PI/4 || player.a > 7*PI/4)
+                            map.mapV[coordToIndex((int)player.pos[X]+1, (int)player.pos[Y], MAP_MAX_X+1)] = game_settings.face_place_idx;
+                        else if (player.a > PI/4 && player.a < 3*PI/4)
+                            map.mapH[coordToIndex((int)player.pos[X], (int)player.pos[Y]+1, MAP_MAX_X)] = game_settings.face_place_idx;
+                        else if (player.a > 3*PI/4 && player.a < 5*PI/4)
+                            map.mapV[coordToIndex((int)player.pos[X], (int)player.pos[Y], MAP_MAX_X+1)] = game_settings.face_place_idx;
+                        else if (player.a > 5*PI/4 && player.a < 7*PI/4)
+                            map.mapH[coordToIndex((int)player.pos[X], (int)player.pos[Y], MAP_MAX_X)] = game_settings.face_place_idx;
                     }
-
+                    if (input.key.keysym.scancode == SDL_SCANCODE_R && game_settings.b_map_editor && !console.b_visible) {
+                        map.mapT[coordToIndex((int)player.pos[X], (int)player.pos[Y], MAP_MAX_X)].clng_type = game_settings.face_place_idx;
+                    }
+                    if (input.key.keysym.scancode == SDL_SCANCODE_F && game_settings.b_map_editor && !console.b_visible) {
+                        map.mapT[coordToIndex((int)player.pos[X], (int)player.pos[Y], MAP_MAX_X)].flor_type = game_settings.face_place_idx;
+                    }
                     if (!console.b_visible) Player_handleKeyboardInput(&player, &input.key, 1);
+
                     break;
                 case SDL_KEYUP:
                     if (input.key.keysym.scancode == SDL_SCANCODE_TAB) {
@@ -200,6 +215,13 @@ static void handleInput() {
                     break;
                 case SDL_MOUSEMOTION:
                     Player_handleMouseMotion(&player, &input.motion, &app);
+                    break;
+                case SDL_MOUSEWHEEL:
+                    if (game_settings.b_map_editor) {
+                        game_settings.face_place_idx -= input.wheel.y;
+
+                        if (game_settings.face_place_idx < 0) game_settings.face_place_idx = 0;
+                    }
                     break;
                 default:
                     break;

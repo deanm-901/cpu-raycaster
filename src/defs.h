@@ -57,6 +57,9 @@ typedef struct _GameSettings {
     int b_map_editor;
     double mouse_sens;
     double fov;
+
+    // map editor settings
+    int face_place_idx;
 } GameSettings;
 
 #define GameSettings_SetDefault(X) X = (GameSettings){.b_debug = 1, .b_limit_pitch = 0, .b_enable_pitch = 1, .b_limit_framerate = 0, .mouse_sens = 0.00045, .fov = 60.0*DEG_TO_RAD};

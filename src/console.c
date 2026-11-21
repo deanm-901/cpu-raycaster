@@ -5,6 +5,7 @@
 HashMap* consoleCommands;
 
 extern Map map;
+extern GameSettings game_settings;
 
 void Console_Println(Console* console, const char* str) {
     memcpy(console->log[console->log_amm++], str, CONSOLE_STRING_COMMAND_MAX_CHAR);
@@ -60,6 +61,7 @@ void Console_ReadTextInput(Console* console, SDL_Event input) {
         if (input.key.keysym.scancode == SDL_SCANCODE_RETURN) {
             Console_FireCurrentCommand(console);
         }
+
     }
 
     if (input.type != SDL_TEXTINPUT) return;
@@ -88,15 +90,16 @@ static void command_clear(ConsoleArg arg, Console* console) {
     memset(console->log, 0, sizeof(console->log));
 }
 
-static void command_addtex(ConsoleArg arg, Console* console) {
-    if (arg.argc < 3) {
-        Console_Println(console, "addtex usage: \"addtex <NAME> <INDEX>\"");
+static void command_texset(ConsoleArg arg, Console* console) {
+    if (arg.argc != 3) {
+        Console_Println(console, "texset usage: \"texset <NAME> <INDEX>\"");
+        return;
     }
     char* endptr;
     long idx = strtol(arg.argv[2], &endptr, 10);
 
     if (endptr == arg.argv[2]) {
-        Console_Println(console, "addtex usage: \"addtex <NAME> <INDEX>\"");
+        Console_Println(console, "texset usage: \"texset <NAME> <INDEX>\"");
         return;
     }
 
@@ -105,10 +108,49 @@ static void command_addtex(ConsoleArg arg, Console* console) {
     Map_initFaceTexData(&map);
 }
 
+static void command_idxset(ConsoleArg arg, Console* console) {
+    if (arg.argc != 2) {
+        Console_Println(console, "idxset usage: \"idxset <INDEX>\"");
+        return;
+    }
+
+    char* endptr;
+    long idx = strtol(arg.argv[1], &endptr, 10);
+
+    if (endptr == arg.argv[1]) {
+        Console_Println(console, "idxset usage: \"idxset <INDEX>\"");
+        return;
+    }
+
+    game_settings.face_place_idx = idx;
+}
+
+static void command_savemap(ConsoleArg arg, Console* console) {
+    if (arg.argc != 2) {
+        Console_Println(console, "savemap usage: \"idxset <NAME>\"");
+        return;
+    }
+    
+    Map_writeToFile(&map, arg.argv[1]);
+}
+
+static void command_loadmap(ConsoleArg arg, Console* console) {
+    if (arg.argc != 2) {
+        Console_Println(console, "loadmap usage: \"idxset <NAME>\"");
+        return;
+    }
+
+    Map_readFromFile(&map, arg.argv[1]);
+
+    
+}
+
 void ConsoleCommands_Init() {
     consoleCommands = HashMap_init();
 
     HashMap_set(consoleCommands, "clear", command_clear, sizeof(command_clear));
-    HashMap_set(consoleCommands, "addtex", command_addtex, sizeof(command_addtex));
-
+    HashMap_set(consoleCommands, "texset", command_texset, sizeof(command_texset));
+    HashMap_set(consoleCommands, "idxset", command_idxset, sizeof(command_idxset));
+    HashMap_set(consoleCommands, "savemap", command_savemap, sizeof(command_savemap));
+    HashMap_set(consoleCommands, "loadmap", command_loadmap, sizeof(command_loadmap));
 }
